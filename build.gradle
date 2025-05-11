@@ -1,0 +1,77 @@
+
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  
+  dependencies {
+    classpath 'io.ratpack:ratpack-gradle:2.0.0-rc-1'
+  }
+}
+
+plugins {
+	id 'application'
+	id 'io.ratpack.ratpack-java' version '2.0.0-rc-1'
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+  implementation 'io.smallrye:jandex:3.3.0'
+  implementation 'jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0'
+  implementation 'org.jboss.weld.se:weld-se-core:6.0.2.Final'
+  implementation 'com.zaxxer:HikariCP:6.3.0'
+  
+  runtimeOnly 'com.h2database:h2:2.3.232'
+  runtimeOnly 'org.slf4j:slf4j-simple:1.7.36'
+  runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+  runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+  compileOnly 'org.projectlombok:lombok:1.18.38'
+
+  annotationProcessor 'org.projectlombok:lombok:1.18.38'
+}
+
+run {
+  // Load .env file into environment variables
+  def env = [:]
+  file('.env').readLines().each { line ->
+    line = line.trim()
+    if (!line.isEmpty() && !line.startsWith('#')) {
+      def separatorIndex = line.indexOf('=')
+      if (separatorIndex > 0) {
+        def key = line.substring(0, separatorIndex).trim()
+        def value = line.substring(separatorIndex + 1).trim()
+        env[key] = value
+      }
+    }
+  }
+  
+  environment env // Set as environment variables
+
+  jvmArgs += ["-Dorg.jboss.weld.bootstrap.debug=true"]
+}
+
+application {
+  mainClass.set("io.github.maaf72.smartthings.Main")
+}
+
+group = 'io.github.maaf72'
+version = '0.0.1-SNAPSHOT'
+
+ 
