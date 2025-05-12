@@ -1,18 +1,28 @@
 package io.github.maaf72.smartthings.domain.user.usecase;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-import io.github.maaf72.smartthings.domain.user.dto.Filter;
+import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
+import io.github.maaf72.smartthings.domain.user.dto.LoginRequest;
+import io.github.maaf72.smartthings.domain.user.dto.RegisterRequest;
 import io.github.maaf72.smartthings.domain.user.entity.User;
+import io.github.maaf72.smartthings.domain.user.entity.User.Role;
+import io.github.maaf72.smartthings.domain.user.entity.UserWithTotalRegisteredDevices;
+import io.github.maaf72.smartthings.itf.AppUsecaseItf;
 
-public interface UserUsecase {
-  Optional<User> findByID(UUID id);
-
-  List<User> find(Filter filter);
-
-  void update(User user);
+public interface UserUsecase extends AppUsecaseItf {
+  List<UserWithTotalRegisteredDevices> listUserWithTotalRegisteredDevices(UUID actorId, Role role, PaginationRequest page);
   
-  void delete(User user);
+  long countUsers();
+
+  List<UserWithTotalRegisteredDevices> listVendorWithTotalRegisteredDevices(UUID actorId, Role role, PaginationRequest page);
+  
+  long countVendors();
+
+  User getUser(UUID actorId, Role role, UUID userId);
+
+  User register(RegisterRequest request);
+
+  String login(LoginRequest request);
 }

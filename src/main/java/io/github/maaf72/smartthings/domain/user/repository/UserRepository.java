@@ -4,15 +4,19 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import io.github.maaf72.smartthings.domain.user.dto.Filter;
+import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.user.entity.User;
+import io.github.maaf72.smartthings.domain.user.entity.UserWithTotalRegisteredDevices;
+import io.github.maaf72.smartthings.itf.AppRepositoryItf;
 
-public interface UserRepository {
-  Optional<User> findByID(UUID id);
+public interface UserRepository extends AppRepositoryItf<User, UUID> {
+  Optional<User> findByEmail(String email);
 
-  List<User> find(Filter filter);
+  List<UserWithTotalRegisteredDevices> findAllUserWithTotalRegisteredDevices(PaginationRequest page);
 
-  void update(User user);
+  long countAllUser();
   
-  void delete(User user);
+  List<UserWithTotalRegisteredDevices> findAllVendorWithTotalRegisteredDevices(PaginationRequest page);
+
+  long countAllVendor();
 }

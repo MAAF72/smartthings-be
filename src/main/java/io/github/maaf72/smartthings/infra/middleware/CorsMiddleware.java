@@ -3,12 +3,10 @@ package io.github.maaf72.smartthings.infra.middleware;
 import io.github.maaf72.smartthings.itf.AppMiddlewareItf;
 import jakarta.enterprise.context.ApplicationScoped;
 import ratpack.core.handling.Context;
-import ratpack.core.handling.Handler;
 import ratpack.core.http.MutableHeaders;
-import ratpack.core.http.Status;
 
 @ApplicationScoped
-public class CorsMiddleware implements AppMiddlewareItf, Handler {
+public class CorsMiddleware implements AppMiddlewareItf {
   @Override
   public void handle(Context ctx) throws Exception {
     MutableHeaders headers = ctx.getResponse().getHeaders();
@@ -21,7 +19,7 @@ public class CorsMiddleware implements AppMiddlewareItf, Handler {
     headers.set("Access-Control-Allow-Credentials", "true");
 
     if (ctx.getRequest().getMethod().isOptions()) {
-      ctx.getResponse().status(Status.OK).send();
+      ctx.getResponse().status(200).send();
 
       return;
     }

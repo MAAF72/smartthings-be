@@ -1,43 +1,41 @@
 package io.github.maaf72.smartthings.domain.device.repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-import javax.sql.DataSource;
-
-import io.github.maaf72.smartthings.domain.device.dto.Filter;
+import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
-import io.github.maaf72.smartthings.itf.AppRepositoryItf;
+import io.github.maaf72.smartthings.infra.database.BaseRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 @ApplicationScoped
-public class DeviceRepositoryImpl implements AppRepositoryItf, DeviceRepository {
+public class DeviceRepositoryImpl extends BaseRepository<Device, UUID> implements DeviceRepository {
 
-  @Inject
-  DataSource db;
-
-  @Override
-  public Optional<Device> findByID(UUID id) {
-    return null;
+  public DeviceRepositoryImpl() {
+    super(Device.class);
   }
 
-  @Override
-  public List<Device> find(Filter filter) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'find'");
+  public List<Device> findAllAvailableDevice(PaginationRequest page) {
+    return findAll((cb, root) -> cb.isNotNull(root.get("registeredBy")), page);
   }
 
-  @Override
-  public void update(Device device) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'update'");
+  public long countAllAvailableDevice() {
+   return countAll((cb, root) -> cb.isNotNull(root.get("registeredBy")));
   }
 
-  @Override
-  public void delete(Device device) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'delete'");
+  public List<Device> findAllVendorDevice(UUID vendorId, PaginationRequest page) {
+    return findAll((cb, root) -> cb.equal(root.get("createdBy"), vendorId), page);
+  }
+
+  public long countAllVendorDevice(UUID vendorId) {
+    return countAll((cb, root) -> cb.equal(root.get("createdBy"), vendorId));
+  }
+
+  public List<Device> findAllUserDevice(UUID userId, PaginationRequest page) {
+    return findAll((cb, root) -> cb.equal(root.get("registeredBy"), userId), page);
+  }
+
+  public long countAllUserDevice(UUID userId) {
+    return countAll((cb, root) -> cb.equal(root.get("registeredBy"), userId));
   }
 }

@@ -5,7 +5,10 @@ import java.util.Map;
 
 import javax.crypto.SecretKey;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import io.github.maaf72.smartthings.config.Config;
+import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -18,7 +21,7 @@ public class JwtUtil {
     return Keys.hmacShaKeyFor(keyBytes);
   }
   
-  public static Claims parseJWTToken(String token) throws Exception {
+  public static Claims parseJWTToken(String token) {
     return Jwts
       .parser()
       .verifyWith(getSignInKey())
@@ -27,7 +30,13 @@ public class JwtUtil {
       .getPayload();
   }
   
-  public static String generateJWTToken(Map<String, ?> claims) throws Exception{
+  public static String generateJWTToken(Object obj) {
+    Map<String, Object> claims = CustomObjectMapper.getObjectMapper().convertValue(obj, new TypeReference<>() {});
+
+    return generateJWTToken(claims);
+  }
+  
+  public static String generateJWTToken(Map<String, ?> claims) {
     return Jwts
       .builder()
       .claims(claims)
