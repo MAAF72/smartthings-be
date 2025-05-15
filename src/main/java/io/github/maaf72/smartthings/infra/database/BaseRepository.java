@@ -16,6 +16,7 @@ import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.itf.AppRepositoryItf;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,15 @@ public abstract class BaseRepository<T, ID extends Serializable> implements AppR
   public Optional<T> findOne(Map<String, Object> filters) {
     return findOne((cb, root) -> 
       cb.and(filters.entrySet().stream()
-        .map(entry -> cb.equal(root.get(entry.getKey()), entry.getValue()))
+        .map(entry -> {
+            String[] keyParts = entry.getKey().split("\\.");
+            Path<?> path = root;
+            for (String part : keyParts) {
+                path = path.get(part);
+            }
+
+          return cb.equal(path, entry.getValue());
+        })
         .toArray(Predicate[]::new)
       )
     );

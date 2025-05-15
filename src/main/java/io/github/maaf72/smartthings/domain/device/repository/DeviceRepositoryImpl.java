@@ -24,18 +24,18 @@ public class DeviceRepositoryImpl extends BaseRepository<Device, UUID> implement
   }
 
   public List<Device> findAllVendorDevice(UUID vendorId, PaginationRequest page) {
-    return findAll((cb, root) -> cb.equal(root.get("createdBy"), vendorId), page);
+    return findAll((cb, root) -> cb.equal(root.get("createdBy").get("id"), vendorId), page);
   }
 
   public long countAllVendorDevice(UUID vendorId) {
-    return countAll((cb, root) -> cb.equal(root.get("createdBy"), vendorId));
+    return countAll((cb, root) -> cb.equal(root.get("createdBy").get("id"), vendorId));
   }
 
   public List<Device> findAllUserDevice(UUID userId, PaginationRequest page) {
-    return findAll((cb, root) -> cb.equal(root.get("registeredBy"), userId), page);
+    return findAll((cb, root) -> cb.equal(root.get("registeredBy").get("id"), userId), page);
   }
 
   public long countAllUserDevice(UUID userId) {
-    return countAll((cb, root) -> cb.equal(root.get("registeredBy"), userId));
+    return countAll((cb, root) -> cb.equal(root.get("registeredBy").get("id"), userId));
   }
 }
