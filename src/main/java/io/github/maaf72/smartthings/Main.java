@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.maaf72.smartthings.config.Config;
 import io.github.maaf72.smartthings.domain.device.handler.DeviceRoutes;
 import io.github.maaf72.smartthings.domain.user.handler.UserRoutes;
+import io.github.maaf72.smartthings.infra.exception.ExceptionHandler;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.middleware.CorsMiddleware;
 import io.github.maaf72.smartthings.infra.middleware.JwtAuthMiddleware;
@@ -19,6 +20,7 @@ import io.github.maaf72.smartthings.itf.AppMiddlewareItf;
 import io.github.maaf72.smartthings.itf.AppRoutesItf;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
+import ratpack.core.error.ServerErrorHandler;
 import ratpack.core.handling.Handler;
 import ratpack.core.server.RatpackServer;
 
@@ -66,6 +68,7 @@ public class Main {
           )
           .registryOf(r -> r
             .add(ObjectMapper.class, CustomObjectMapper.getObjectMapper())
+            .add(ServerErrorHandler.class, new ExceptionHandler())
           )
           .handlers(c -> {
             c.files(f -> f.dir("swagger").files("swagger-ui").indexFiles("index.html"));
