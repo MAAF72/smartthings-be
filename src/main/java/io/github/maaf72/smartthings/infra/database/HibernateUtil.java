@@ -12,7 +12,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.tool.schema.Action;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexReader;
 
@@ -32,7 +31,6 @@ public class HibernateUtil {
       AvailableSettings.JAKARTA_JDBC_URL, Config.APP_DATABASE_JDBC_URL,
       AvailableSettings.JAKARTA_JDBC_USER, Config.APP_DATABASE_USERNAME,
       AvailableSettings.JAKARTA_JDBC_PASSWORD, Config.APP_DATABASE_PASSWORD,
-      AvailableSettings.HBM2DDL_AUTO, Action.UPDATE,
       AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, true,
       AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS, true,
       AvailableSettings.PHYSICAL_NAMING_STRATEGY, CamelCaseToUnderscoresNamingStrategy.class.getName(),

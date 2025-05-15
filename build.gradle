@@ -93,9 +93,6 @@ jandex {
   version = '3.3.0'
 }
 
-// processResources {
-//   dependsOn tasks.named('jandex')
-// }
 
 flyway {
   locations = ['filesystem:src/main/resources/database/migration']
