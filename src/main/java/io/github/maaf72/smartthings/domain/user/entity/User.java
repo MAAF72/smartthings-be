@@ -21,8 +21,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderColumn;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.ToString;
@@ -48,14 +49,15 @@ public class User implements Serializable {
   @Enumerated(EnumType.STRING)
   private Role role;
 
-  @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
-  @OrderColumn(name = "createdAt")
+  @OneToMany(mappedBy = "createdBy", fetch = FetchType.EAGER)
+  @OrderBy("createdAt ASC")
   private List<Device> createdDevices;
 
-  @OneToMany(mappedBy = "registeredBy", fetch = FetchType.LAZY)
-  @OrderColumn(name = "registeredAt")
+  @OneToMany(mappedBy = "registeredBy", fetch = FetchType.EAGER)
+  @OrderBy("registeredAt ASC")
   private List<Device> registeredDevices;
 
+  @Column(updatable = false)
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
@@ -66,5 +68,10 @@ public class User implements Serializable {
   @PrePersist
   public void prePersist() {
     this.createdAt = LocalDateTime.now();
+  }
+
+  @PreUpdate
+  protected void onUpdate() {
+    updatedAt = LocalDateTime.now();
   }
 }
