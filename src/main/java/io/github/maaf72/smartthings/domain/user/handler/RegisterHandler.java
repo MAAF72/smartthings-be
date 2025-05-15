@@ -31,7 +31,7 @@ public class RegisterHandler implements Handler {
 
       ctx.render(Jackson.json(BaseResponse.of(
         true,
-        "login success",
+        "register success",
         new RegisterResponse(user.getId(), user.getEmail(), user.getRole())
       )));
     });

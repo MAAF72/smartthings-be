@@ -1,5 +1,6 @@
 package io.github.maaf72.smartthings.domain.device.usecase;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -203,6 +204,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
     }
 
     device.setRegisteredBy(userRepository.getReference(actorId));
+    device.setRegisteredAt(LocalDateTime.now());
 
     device = repository.update(device);
 
@@ -238,6 +240,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
     }
 
     device.setRegisteredBy(null);
+    device.setRegisteredAt(null);
   
     device = repository.update(device);
 

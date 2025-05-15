@@ -65,7 +65,7 @@ public class Device implements Serializable {
     updatedAt = LocalDateTime.now();
   }
 
-@Data
+  @Data
   public static class DeviceConfiguration implements Serializable {
     private Integer minValue;
     private Integer maxValue;
