@@ -7,10 +7,12 @@ import java.util.List;
 import org.jboss.weld.environment.se.Weld;
 import org.jboss.weld.environment.se.WeldContainer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.github.maaf72.smartthings.config.Config;
 import io.github.maaf72.smartthings.domain.device.handler.DeviceRoutes;
-import io.github.maaf72.smartthings.domain.user.handler.AuthRoutes;
 import io.github.maaf72.smartthings.domain.user.handler.UserRoutes;
+import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.middleware.CorsMiddleware;
 import io.github.maaf72.smartthings.infra.middleware.JwtAuthMiddleware;
 import io.github.maaf72.smartthings.itf.AppMiddlewareItf;
@@ -34,8 +36,7 @@ public class Main {
     setupDependencies();
     setupWebServer();
   }
-
-
+  
   private void setupDependencies() {
     weld = new Weld();
     weld.addPackages(true, Main.class);
@@ -62,6 +63,9 @@ public class Main {
             .baseDir(new File("statics").getAbsoluteFile())
             .development(Config.APP_DEVELOPMENT)
             .port(Config.APP_PORT)
+          )
+          .registryOf(r -> r
+            .add(ObjectMapper.class, CustomObjectMapper.getObjectMapper())
           )
           .handlers(c -> {
             c.files(f -> f.dir("swagger").files("swagger-ui").indexFiles("index.html"));

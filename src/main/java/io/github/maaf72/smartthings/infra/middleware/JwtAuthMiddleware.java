@@ -4,16 +4,19 @@ import java.util.Date;
 import java.util.Optional;
 
 import io.github.maaf72.smartthings.config.Config;
+import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.security.JwtUtil;
+import io.github.maaf72.smartthings.infra.security.UserClaims;
 import io.github.maaf72.smartthings.itf.AppMiddlewareItf;
 import io.jsonwebtoken.Claims;
 import jakarta.enterprise.context.ApplicationScoped;
+import lombok.extern.slf4j.Slf4j;
 import ratpack.core.handling.Context;
-import ratpack.core.handling.Handler;
-import ratpack.core.http.Status;
+import ratpack.exec.registry.Registry;
 
 @ApplicationScoped
-public class JwtAuthMiddleware implements AppMiddlewareItf, Handler {
+@Slf4j
+public class JwtAuthMiddleware implements AppMiddlewareItf {
   protected static final String AUTH_HEADER_KEY = "Authorization";
   protected static final String AUTH_HEADER_PREFIX = "Bearer ";
 
@@ -32,10 +35,10 @@ public class JwtAuthMiddleware implements AppMiddlewareItf, Handler {
     Optional<String> authHeader = ctx.header(AUTH_HEADER_KEY);
 
     try {
-      String authHeaderStr = authHeader.get();
-
+      String authHeaderStr = authHeader.orElseThrow(() -> new Exception("missing authorization header"));
+      
       if (!authHeaderStr.startsWith(AUTH_HEADER_PREFIX)) {
-        throw new Exception("Invalid authorization header");
+        throw new Exception("invalid authorization header");
       }
 
       String authToken = authHeaderStr.substring(AUTH_HEADER_PREFIX.length());
@@ -43,14 +46,19 @@ public class JwtAuthMiddleware implements AppMiddlewareItf, Handler {
       Claims claims = JwtUtil.parseJWTToken(authToken);
 
       if (claims == null || claims.getExpiration().before(new Date())) {
-        throw new Exception("Invalid authorization token");  
+        throw new Exception("invalid authorization token");
       }
+      
+      UserClaims userClaims = CustomObjectMapper.getObjectMapper().convertValue(claims, UserClaims.class);
+
+      Registry userRegistry = Registry.single(UserClaims.class, userClaims);
+      
+      ctx.next(userRegistry);
     } catch (Exception e) {
-        ctx.getResponse().status(Status.UNAUTHORIZED).send(Status.UNAUTHORIZED.getMessage());
+      ctx.getResponse().status(401).send("Unauthorized");
+      log.error("error: " + e.getMessage());
 
-        return;
+      return;
     }
-
-    ctx.next();
   }
 }
