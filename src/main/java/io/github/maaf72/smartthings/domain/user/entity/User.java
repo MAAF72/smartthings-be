@@ -10,6 +10,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.SoftDelete;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import jakarta.persistence.Column;
@@ -51,10 +52,12 @@ public class User implements Serializable {
 
   @OneToMany(mappedBy = "createdBy", fetch = FetchType.EAGER)
   @OrderBy("createdAt ASC")
+  @JsonIgnoreProperties({ "created_by", "registered_by" })
   private List<Device> createdDevices;
 
   @OneToMany(mappedBy = "registeredBy", fetch = FetchType.EAGER)
   @OrderBy("registeredAt ASC")
+  @JsonIgnoreProperties({ "created_by", "registered_by" })
   private List<Device> registeredDevices;
 
   @Column(updatable = false)

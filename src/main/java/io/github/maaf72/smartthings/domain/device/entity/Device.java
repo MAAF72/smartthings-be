@@ -9,6 +9,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.type.SqlTypes;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import io.github.maaf72.smartthings.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -42,12 +44,14 @@ public class Device implements Serializable {
   private DeviceConfiguration deviceConfiguration;
   private Integer value;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "created_by_id")
+  @JsonIgnoreProperties({ "created_devices", "registered_devices" })
   private User createdBy;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "registered_by_id")
+  @JsonIgnoreProperties({ "created_devices", "registered_devices" })
   private User registeredBy;
 
   @Column(updatable = false)
