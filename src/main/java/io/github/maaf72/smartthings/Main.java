@@ -53,7 +53,6 @@ public class Main {
     );
 
     List<AppRoutesItf> routesList = Arrays.asList(
-      container.select(AuthRoutes.class).get(),
       container.select(UserRoutes.class).get(),
       container.select(DeviceRoutes.class).get()
     );

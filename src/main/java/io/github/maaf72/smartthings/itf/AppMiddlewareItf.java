@@ -1,5 +1,7 @@
 package io.github.maaf72.smartthings.itf;
 
-public interface AppMiddlewareItf {
+import ratpack.core.handling.Handler;
+
+public interface AppMiddlewareItf extends Handler {
   
 }
