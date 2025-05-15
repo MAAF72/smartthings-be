@@ -1,18 +1,22 @@
 package io.github.maaf72.smartthings.domain.device.repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-import io.github.maaf72.smartthings.domain.device.dto.Filter;
+import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
+import io.github.maaf72.smartthings.itf.AppRepositoryItf;
 
-public interface DeviceRepository {
-  Optional<Device> findByID(UUID id);
+public interface DeviceRepository extends AppRepositoryItf<Device, UUID> {
+  List<Device> findAllAvailableDevice(PaginationRequest page);
 
-  List<Device> find(Filter filter);
+  long countAllAvailableDevice();
 
-  void update(Device device);
+  List<Device> findAllVendorDevice(UUID vendorId, PaginationRequest page);
+  
+  long countAllVendorDevice(UUID vendorId);
 
-  void delete(Device device);
+  List<Device> findAllUserDevice(UUID userId, PaginationRequest page);
+
+  long countAllUserDevice(UUID userId);
 }
