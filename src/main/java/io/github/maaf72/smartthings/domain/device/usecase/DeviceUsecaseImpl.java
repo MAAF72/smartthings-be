@@ -14,11 +14,13 @@ import io.github.maaf72.smartthings.domain.device.dto.UpdateDeviceRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.domain.device.entity.Device.DeviceConfiguration;
 import io.github.maaf72.smartthings.domain.device.repository.DeviceRepository;
+import io.github.maaf72.smartthings.domain.user.entity.User;
 import io.github.maaf72.smartthings.domain.user.entity.User.Role;
 import io.github.maaf72.smartthings.domain.user.repository.UserRepository;
 import io.github.maaf72.smartthings.infra.exception.HttpException;
 import io.github.maaf72.smartthings.infra.mapper.CustomModelMapper;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
+import io.github.maaf72.smartthings.infra.thirdapi.translation.TranslationService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,9 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
 
   @Inject
   AuditLogRepository auditLogRepository;
+
+  @Inject
+  TranslationService translationService;
 
   public Device createDevice(UUID actorId, Role role, CreateDeviceRequest request) {
     if (!role.equals(Role.DEVICE_VENDOR)) {
@@ -71,10 +76,12 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
   }
   
   public List<Device> listDevice(UUID actorId, Role role, PaginationRequest page) {
+    User user = userRepository.findById(actorId).orElseThrow(() -> new HttpException(404, "user not found"));
+    
     switch (role) {
       case ST_ADMINISTRATOR: return repository.findAll(page);
       case Role.DEVICE_VENDOR: return repository.findAllVendorDevice(actorId, page);
-      case Role.ST_USERS: return repository.findAllUserDevice(actorId, page);
+      case Role.ST_USERS: return translateListDevice(repository.findAllUserDevice(actorId, page), user.getCountry());
       default: throw new HttpException(500, "unknown role");
     }
   }
@@ -88,8 +95,12 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
     }
   }
 
-  public List<Device> listAvailableDevice(PaginationRequest page) {
-    return repository.findAllAvailableDevice(page);
+  public List<Device> listAvailableDevice(UUID actorId, PaginationRequest page) {
+    User user = userRepository.findById(actorId).orElseThrow(() -> new HttpException(404, "user not found"));
+    
+    List<Device> listAvailableDevice = repository.findAllAvailableDevice(page);
+
+    return translateListDevice(listAvailableDevice, user.getCountry());
   }
 
   public long countAvailableDevice() {
@@ -231,9 +242,9 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
       throw new HttpException(400, "this device is not registered");
     }
 
-    boolean isAllowed = 
-      (false)
-      || (role.equals(Role.ST_USERS) && device.getRegisteredBy() != null && device.getRegisteredBy().getId().equals(actorId));
+    boolean isAllowed = (false)
+        || (role.equals(Role.ST_USERS) && device.getRegisteredBy() != null
+            && device.getRegisteredBy().getId().equals(actorId));
 
     if (!isAllowed) {
       throw new HttpException(403, "you can not unregister this device");
@@ -241,7 +252,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
 
     device.setRegisteredBy(null);
     device.setRegisteredAt(null);
-  
+
     device = repository.update(device);
 
     {
@@ -251,11 +262,20 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
       auditLog.setAction("UNREGISTER");
       auditLog.setSubject(actorId.toString());
       auditLog.setObject(device.getId().toString());
-      auditLog.setMetadata(CustomObjectMapper.getObjectMapper().convertValue(device, new TypeReference<>() {}));
+      auditLog.setMetadata(CustomObjectMapper.getObjectMapper().convertValue(device, new TypeReference<>() {
+      }));
 
       auditLogRepository.create(auditLog);
     }
-    
+
     return;
+  }
+  
+  private List<Device> translateListDevice(List<Device> listDevice, String country) {
+    listDevice.stream().forEach(d -> {
+      d.setDeviceDescription(translationService.SingleCountryTranslate(d.getDeviceDescription(), country));
+    });
+
+    return listDevice;
   }
 }

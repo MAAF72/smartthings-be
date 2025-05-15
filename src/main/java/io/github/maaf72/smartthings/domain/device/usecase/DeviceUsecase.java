@@ -17,7 +17,7 @@ public interface DeviceUsecase extends AppUsecaseItf {
 
   long countDevice(UUID actorId, Role role);
   
-  List<Device> listAvailableDevice(PaginationRequest page);
+  List<Device> listAvailableDevice(UUID actorId, PaginationRequest page);
   
   long countAvailableDevice();
 

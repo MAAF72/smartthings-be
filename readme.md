@@ -67,7 +67,8 @@ src
     │                   │   ├── exception       # Global error handling
     │                   │   ├── mapper          # Object mapper
     │                   │   ├── middleware      # HTTP middleware
-    │                   │   └── security        # Security utilities
+    │                   │   ├── security        # Security utilities
+    │                   │   └── thirdapi        # 3rd API integrations
     │                   └── itf                 # Abstractions to decouple layers
     └── resources
         ├── META-INF
