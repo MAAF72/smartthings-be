@@ -16,11 +16,11 @@ public class DeviceRepositoryImpl extends BaseRepository<Device, UUID> implement
   }
 
   public List<Device> findAllAvailableDevice(PaginationRequest page) {
-    return findAll((cb, root) -> cb.isNotNull(root.get("registeredBy")), page);
+    return findAll((cb, root) -> cb.isNull(root.get("registeredBy")), page);
   }
 
   public long countAllAvailableDevice() {
-   return countAll((cb, root) -> cb.isNotNull(root.get("registeredBy")));
+   return countAll((cb, root) -> cb.isNull(root.get("registeredBy")));
   }
 
   public List<Device> findAllVendorDevice(UUID vendorId, PaginationRequest page) {
