@@ -3,12 +3,11 @@ package io.github.maaf72.smartthings.domain.common.dto;
 import java.io.Serializable;
 import java.util.List;
 
-
 public class PaginationResponse<T> extends BaseResponse<List<T>> {
   public final Metadata<T> metadata;
   
   public PaginationResponse(boolean success, String message, List<T> items, int page, int size, long totalItems) {
-    super(success, message, items);
+    super(success, message, items); 
     this.metadata = new Metadata<>(page, size, totalItems);
   }
   

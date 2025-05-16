@@ -35,7 +35,7 @@ public class UserUsecaseImpl implements UserUsecase {
   public User getUser(UUID actorId, Role role, UUID userId) {
     boolean isAllowed = 
       (false)
-      || (role.equals(Role.ST_USERS) && actorId.equals(userId))
+      || (actorId.equals(userId))
       || (role.equals(Role.ST_ADMINISTRATOR));
       
     if (!isAllowed) {
@@ -43,7 +43,7 @@ public class UserUsecaseImpl implements UserUsecase {
     }
 
     User user = repository.findById(userId).orElseThrow(() -> new HttpException(404, "user not found"));
-
+    
     // add preload devices
     return user;
   }

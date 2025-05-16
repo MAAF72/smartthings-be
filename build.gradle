@@ -32,6 +32,9 @@ dependencies {
   implementation 'jakarta.validation:jakarta.validation-api:3.1.1'
   implementation 'org.glassfish.expressly:expressly:5.0.0'
   implementation 'org.modelmapper:modelmapper:3.2.3'
+  implementation 'io.swagger.core.v3:swagger-core-jakarta:2.2.30'
+  implementation 'io.swagger.core.v3:swagger-annotations-jakarta:2.2.30'
+  implementation 'io.swagger.core.v3:swagger-models-jakarta:2.2.30'
 
   runtimeOnly 'org.postgresql:postgresql:42.7.5'
 

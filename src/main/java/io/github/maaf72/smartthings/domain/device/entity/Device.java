@@ -10,6 +10,8 @@ import org.hibernate.annotations.SoftDelete;
 import org.hibernate.type.SqlTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 import io.github.maaf72.smartthings.domain.user.entity.User;
 import jakarta.persistence.Column;
@@ -32,6 +34,7 @@ import lombok.ToString;
 @ToString(exclude = { "createdBy", "registeredBy" })
 @DynamicUpdate
 @SoftDelete
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class Device implements Serializable {
 
   @Id
@@ -70,6 +73,7 @@ public class Device implements Serializable {
   }
 
   @Data
+  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
   public static class DeviceConfiguration implements Serializable {
     private Integer minValue;
     private Integer maxValue;

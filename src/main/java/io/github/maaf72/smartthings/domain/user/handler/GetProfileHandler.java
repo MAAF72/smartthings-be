@@ -1,9 +1,14 @@
 package io.github.maaf72.smartthings.domain.user.handler;
 
+import io.github.maaf72.smartthings.annotation.ApiDoc;
 import io.github.maaf72.smartthings.domain.common.dto.BaseResponse;
 import io.github.maaf72.smartthings.domain.user.entity.User;
 import io.github.maaf72.smartthings.domain.user.usecase.UserUsecase;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +18,22 @@ import ratpack.core.jackson.Jackson;
 
 @ApplicationScoped
 @RequiredArgsConstructor
+@ApiDoc(
+  path = "/users/me", 
+  operation = @Operation(
+    method = "GET",
+    tags = "Profile", 
+    operationId = "GetProfile",
+    summary = "Get Profile",
+    responses = {
+      @ApiResponse(
+        responseCode = "200", 
+        description = "success response", 
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))
+      )
+    }
+  )
+)
 public class GetProfileHandler implements Handler {
   
   @Inject

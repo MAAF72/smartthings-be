@@ -10,6 +10,7 @@ import org.jboss.weld.environment.se.WeldContainer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.maaf72.smartthings.config.Config;
+import io.github.maaf72.smartthings.config.SwaggerConfig;
 import io.github.maaf72.smartthings.domain.device.handler.DeviceRoutes;
 import io.github.maaf72.smartthings.domain.user.handler.UserRoutes;
 import io.github.maaf72.smartthings.infra.exception.ExceptionHandler;
@@ -18,6 +19,7 @@ import io.github.maaf72.smartthings.infra.middleware.CorsMiddleware;
 import io.github.maaf72.smartthings.infra.middleware.JwtAuthMiddleware;
 import io.github.maaf72.smartthings.itf.AppMiddlewareItf;
 import io.github.maaf72.smartthings.itf.AppRoutesItf;
+import io.swagger.v3.oas.models.OpenAPI;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import ratpack.core.error.ServerErrorHandler;
@@ -45,7 +47,7 @@ public class Main {
     container = weld.initialize();
     log.info("CDI container initialized");
   }
-  
+
   private void setupWebServer() throws Exception {
     List<AppMiddlewareItf> middlewareList = Arrays.asList(
       container.select(CorsMiddleware.class).get(),
@@ -56,6 +58,8 @@ public class Main {
       container.select(UserRoutes.class).get(),
       container.select(DeviceRoutes.class).get()
     );
+
+    OpenAPI openAPI = SwaggerConfig.openAPI();
 
     RatpackServer
       .start(server -> {
@@ -70,10 +74,13 @@ public class Main {
             .add(ServerErrorHandler.class, new ExceptionHandler())
           )
           .handlers(c -> {
-            c.files(f -> f.dir("swagger").files("swagger-ui").indexFiles("index.html"));
+            c.files(f -> f.files("swagger-ui").indexFiles("index.html"));
             middlewareList.forEach(r -> c.all((Handler) r));
             c.prefix(Config.APP_API_PREFIX, cApi -> {
               routesList.forEach(r -> r.Routes(cApi));
+            });
+            c.get("swagger-ui/swagger.json", ctx -> {
+              ctx.getResponse().contentType("application/json").send(SwaggerConfig.toJsonString(openAPI));
             });
           });
       });

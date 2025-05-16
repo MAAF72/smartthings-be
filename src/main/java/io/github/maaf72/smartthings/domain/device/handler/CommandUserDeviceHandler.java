@@ -2,12 +2,20 @@ package io.github.maaf72.smartthings.domain.device.handler;
 
 import java.util.UUID;
 
+import io.github.maaf72.smartthings.annotation.ApiDoc;
 import io.github.maaf72.smartthings.domain.common.dto.BaseResponse;
 import io.github.maaf72.smartthings.domain.device.dto.UpdateDeviceRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.domain.device.usecase.DeviceUsecase;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
 import io.github.maaf72.smartthings.infra.security.ValidationUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +25,33 @@ import ratpack.core.jackson.Jackson;
 
 @ApplicationScoped
 @RequiredArgsConstructor
+@ApiDoc(
+  path = "/vendor/devices/{id}", 
+  operation = @Operation(
+    method = "PUT",
+    tags = "Vendor", 
+    operationId = "UpdateVendorDevice",
+    summary = "Update Vendor Device",
+    description = "Update Vendor Device",
+    parameters = {
+      @Parameter(
+        name = "id", description = "device id", required = true, in = ParameterIn.PATH,
+        schema = @Schema(type = "string", format = "uuid")
+      ),
+    },
+    requestBody = @RequestBody(
+      required = true, 
+      content = @Content(mediaType = "application/json", schema = @Schema(implementation = UpdateDeviceRequest.class))
+    ),
+    responses = {
+      @ApiResponse(
+        responseCode = "200", 
+        description = "success response", 
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = Device.class))
+      )
+    }
+  )
+)
 public class CommandUserDeviceHandler implements Handler {
   
   @Inject

@@ -11,6 +11,8 @@ import org.hibernate.annotations.SoftDelete;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import jakarta.persistence.Column;
@@ -35,6 +37,7 @@ import lombok.ToString;
 @ToString(exclude = { "createdDevices", "registeredDevices" })
 @DynamicUpdate
 @SoftDelete
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class User implements Serializable {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
