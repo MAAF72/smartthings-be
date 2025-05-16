@@ -6,6 +6,7 @@ import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.common.dto.PaginationResponse;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.domain.device.usecase.DeviceUsecase;
+import io.github.maaf72.smartthings.infra.security.UserClaims;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +25,14 @@ public class ListAvailableVendorDeviceHandler implements Handler {
 
   @Override
   public void handle(Context ctx) throws Exception {
+    UserClaims userClaims = ctx.get(UserClaims.class);
+
     PaginationRequest page = PaginationRequest.of(
       ctx.getRequest().getQueryParams().get("page"),
       ctx.getRequest().getQueryParams().get("size")
     );
 
-    List<Device> listAvailableDevice = deviceUsecase.listAvailableDevice(page);
+    List<Device> listAvailableDevice = deviceUsecase.listAvailableDevice(userClaims.getId(), page);
 
     long totalAvailableDevice = deviceUsecase.countAvailableDevice();
 
