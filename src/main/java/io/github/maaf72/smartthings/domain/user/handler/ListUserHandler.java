@@ -4,9 +4,11 @@ import java.util.List;
 
 import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.common.dto.PaginationResponse;
-import io.github.maaf72.smartthings.domain.user.entity.User;
+import io.github.maaf72.smartthings.domain.user.dto.UserResponse;
+import io.github.maaf72.smartthings.domain.user.dto.UserWithSummaryResponse;
 import io.github.maaf72.smartthings.domain.user.entity.UserWithTotalRegisteredDevices;
 import io.github.maaf72.smartthings.domain.user.usecase.UserUsecase;
+import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,8 +48,7 @@ import ratpack.core.jackson.Jackson;
       @ApiResponse(
         responseCode = "200", 
         description = "success response", 
-        content = @Content(mediaType = "application/json", schema = @Schema(allOf = {PaginationResponse.class, User.class}))
-        // content = @Content(mediaType = "application/json", allOf = {@Schema(implementation = PaginationResponse.class), @Schema(implementation = User.class)})
+        content = @Content(mediaType = "application/json", schema = @Schema(allOf = {PaginationResponse.class, UserResponse.class}))
       )
     }
   )
@@ -73,7 +74,11 @@ public class ListUserHandler implements Handler {
     ctx.render(Jackson.json(PaginationResponse.of(
       true,
       "users retrieved",
-      listUser,
+      listUser.stream().map(user -> {
+        UserWithSummaryResponse x = CustomObjectMapper.getObjectMapper().convertValue(user.getUser(), UserWithSummaryResponse.class);
+        x.setTotalRegisteredDevices(user.getTotalRegisteredDevices());
+        return x;
+      }).toList(),
       totalUser,
       page
     )));

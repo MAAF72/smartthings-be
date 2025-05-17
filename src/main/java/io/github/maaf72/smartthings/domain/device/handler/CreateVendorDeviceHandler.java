@@ -2,8 +2,10 @@ package io.github.maaf72.smartthings.domain.device.handler;
 
 import io.github.maaf72.smartthings.domain.common.dto.BaseResponse;
 import io.github.maaf72.smartthings.domain.device.dto.CreateDeviceRequest;
+import io.github.maaf72.smartthings.domain.device.dto.DeviceResponse;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.domain.device.usecase.DeviceUsecase;
+import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
 import io.github.maaf72.smartthings.infra.security.ValidationUtil;
@@ -37,7 +39,7 @@ import ratpack.core.jackson.Jackson;
       @ApiResponse(
         responseCode = "200", 
         description = "success response", 
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = Device.class))
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeviceResponse.class))
       )
     }
   )
@@ -59,7 +61,7 @@ public class CreateVendorDeviceHandler implements Handler {
       ctx.render(Jackson.json(BaseResponse.of(
         true,
         "device created",
-        device
+        CustomObjectMapper.getObjectMapper().convertValue(device, DeviceResponse.class)
       )));
     });
   }

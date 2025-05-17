@@ -3,8 +3,10 @@ package io.github.maaf72.smartthings.domain.user.handler;
 import java.util.UUID;
 
 import io.github.maaf72.smartthings.domain.common.dto.BaseResponse;
+import io.github.maaf72.smartthings.domain.user.dto.UserResponse;
 import io.github.maaf72.smartthings.domain.user.entity.User;
 import io.github.maaf72.smartthings.domain.user.usecase.UserUsecase;
+import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,7 +41,7 @@ import ratpack.core.jackson.Jackson;
       @ApiResponse(
         responseCode = "200", 
         description = "success response", 
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class))
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponse.class))
       )
     }
   )
@@ -57,13 +59,10 @@ public class GetUserHandler implements Handler {
 
     User user = userUsecase.getUser(userClaims.getId(), userClaims.getRole(), userId);
 
-    // GetUserResponse response = CustomObjectMapper.getObjectMapper().convertValue(user, GetUserResponse.class);
-
     ctx.render(Jackson.json(BaseResponse.of(
       true,
       "user retrieved",
-      // response
-      user
+      CustomObjectMapper.getObjectMapper().convertValue(user, UserResponse.class)
     )));
   }
 }

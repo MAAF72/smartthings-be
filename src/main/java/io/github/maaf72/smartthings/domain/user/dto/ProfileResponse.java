@@ -6,6 +6,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,7 +16,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GetUserResponse {
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+public class ProfileResponse {
   private UUID id;
   private String email;
   private String name;
@@ -22,12 +26,14 @@ public class GetUserResponse {
   private String country;
   private String role;
   private List<Device> registeredDevices;
+  private List<Device> createdDevices;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt; 
 
-
   @Data
+  @AllArgsConstructor
   @NoArgsConstructor
+  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
   public static class Device implements Serializable {
     private UUID id;
     private String brandName;

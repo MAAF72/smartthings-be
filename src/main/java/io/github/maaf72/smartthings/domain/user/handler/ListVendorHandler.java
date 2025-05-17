@@ -4,9 +4,11 @@ import java.util.List;
 
 import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.common.dto.PaginationResponse;
-import io.github.maaf72.smartthings.domain.user.entity.User;
+import io.github.maaf72.smartthings.domain.user.dto.VendorResponse;
+import io.github.maaf72.smartthings.domain.user.dto.VendorWithSummaryResponse;
 import io.github.maaf72.smartthings.domain.user.entity.UserWithTotalRegisteredDevices;
 import io.github.maaf72.smartthings.domain.user.usecase.UserUsecase;
+import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,7 +48,7 @@ import ratpack.core.jackson.Jackson;
       @ApiResponse(
         responseCode = "200", 
         description = "success response", 
-        content = @Content(mediaType = "application/json", schema = @Schema(allOf = {PaginationResponse.class, User.class}))
+        content = @Content(mediaType = "application/json", schema = @Schema(allOf = {PaginationResponse.class, VendorResponse.class}))
       )
     }
   )
@@ -72,7 +74,11 @@ public class ListVendorHandler implements Handler {
     ctx.render(Jackson.json(PaginationResponse.of(
       true,
       "vendors retrieved",
-      listVendor,
+      listVendor.stream().map(vendor -> {
+        VendorWithSummaryResponse x = CustomObjectMapper.getObjectMapper().convertValue(vendor.getUser(), VendorWithSummaryResponse.class);
+        x.setTotalRegisteredDevices(vendor.getTotalRegisteredDevices());
+        return x;
+      }).toList(),
       totalVendor,
       page
     )));
