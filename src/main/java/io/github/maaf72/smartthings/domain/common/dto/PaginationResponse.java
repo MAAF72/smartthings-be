@@ -3,6 +3,10 @@ package io.github.maaf72.smartthings.domain.common.dto;
 import java.io.Serializable;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class PaginationResponse<T> extends BaseResponse<List<T>> {
   public final Metadata<T> metadata;
   
@@ -10,7 +14,8 @@ public class PaginationResponse<T> extends BaseResponse<List<T>> {
     super(success, message, items); 
     this.metadata = new Metadata<>(page, size, totalItems);
   }
-  
+
+  @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
   public static class Metadata<T> implements Serializable {
     public final int page;
     public final int size;

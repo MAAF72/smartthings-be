@@ -2,11 +2,11 @@ package io.github.maaf72.smartthings.domain.device.handler;
 
 import java.util.UUID;
 
-import io.github.maaf72.smartthings.annotation.ApiDoc;
 import io.github.maaf72.smartthings.domain.common.dto.BaseResponse;
 import io.github.maaf72.smartthings.domain.device.dto.UpdateDeviceRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.domain.device.usecase.DeviceUsecase;
+import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
 import io.github.maaf72.smartthings.infra.security.ValidationUtil;
 import io.swagger.v3.oas.annotations.Operation;

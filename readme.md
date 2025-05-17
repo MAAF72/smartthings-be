@@ -67,6 +67,7 @@ src
     │                   │   ├── exception       # Global error handling
     │                   │   ├── mapper          # Object mapper
     │                   │   ├── middleware      # HTTP middleware
+    │                   │   ├── oas             # Open API Spec utilities
     │                   │   ├── security        # Security utilities
     │                   │   └── thirdapi        # 3rd API integrations
     │                   └── itf                 # Abstractions to decouple layers
@@ -99,4 +100,4 @@ Configure these environment variables:
 - `APP_JWT_TOKEN_DURATION`: Token expiration time (default: 86400000 milliseconds / 24 hours)
 
 ## API Documentation
-The application exposes REST endpoints documented via OpenAPI. Access Swagger UI at: ```http://localhost:8080/swagger```
+The application exposes REST endpoints documented via OpenAPI. Access Swagger UI at: ```http://localhost:8080/swagger-ui```

@@ -1,4 +1,4 @@
-package io.github.maaf72.smartthings.annotation;
+package io.github.maaf72.smartthings.infra.oas.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
