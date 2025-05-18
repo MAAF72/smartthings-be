@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.maaf72.smartthings.config.Config;
 import io.github.maaf72.smartthings.domain.device.handler.DeviceRoutes;
 import io.github.maaf72.smartthings.domain.user.handler.UserRoutes;
+import io.github.maaf72.smartthings.infra.database.HibernateUtil;
 import io.github.maaf72.smartthings.infra.exception.ExceptionHandler;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.middleware.CorsMiddleware;
@@ -40,11 +41,13 @@ public class Main {
     setupWebServer();
   }
   
-  private void setupDependencies() {
+  private void setupDependencies() throws Exception {
     weld = new Weld();
     weld.addPackages(true, Main.class);
     container = weld.initialize();
-    log.info("CDI container initialized");
+
+    // Eager initialization
+    container.select(HibernateUtil.class).get().ensureInitialized();
   }
 
   private void setupWebServer() throws Exception {

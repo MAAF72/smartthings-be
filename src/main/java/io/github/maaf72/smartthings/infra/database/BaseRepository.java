@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
@@ -22,10 +23,11 @@ import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public abstract class BaseRepository<T, ID extends Serializable> implements AppRepositoryItf<T, ID> {
   private final Class<T> entityClass;
+  protected final SessionFactory sessionFactory;
 
   public Optional<T> findById(ID id) {
     return Optional.ofNullable(doInSession(session -> session.get(entityClass, id)));
@@ -136,16 +138,16 @@ public abstract class BaseRepository<T, ID extends Serializable> implements AppR
   }
 
   public T getReference(ID id) {
-    try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+    try (Session session = sessionFactory.openSession()) {
       return session.getReference(entityClass, id);
     } catch (Exception e) {
       throw new RuntimeException("Reference operation failed", e);
     }
   }
   
-  public static <R> R doInTransaction(Function<Session, R> function) {
+  protected <R> R doInTransaction(Function<Session, R> function) {
     Transaction tx = null;
-    try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+    try (Session session = sessionFactory.openSession()) {
       tx = session.beginTransaction();
       R result = function.apply(session);
       tx.commit();
@@ -160,7 +162,7 @@ public abstract class BaseRepository<T, ID extends Serializable> implements AppR
     }
   }
   
-  public static void runInTransaction(Consumer<Session> consumer) {
+  protected void runInTransaction(Consumer<Session> consumer) {
     doInTransaction(session -> {
       consumer.accept(session);
 
@@ -168,8 +170,8 @@ public abstract class BaseRepository<T, ID extends Serializable> implements AppR
     });
   }
   
-  public static <R> R doInSession(Function<Session, R> function) {
-    try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+  protected <R> R doInSession(Function<Session, R> function) {
+    try (Session session = sessionFactory.openSession()) {
       return function.apply(session);
     } catch (Exception e) {
       log.error("Session operation failed", e);
@@ -177,7 +179,7 @@ public abstract class BaseRepository<T, ID extends Serializable> implements AppR
     }
   }
 
-  public static void runInSession(Consumer<Session> consumer) {
+  protected void runInSession(Consumer<Session> consumer) {
     doInSession(session -> {
       consumer.accept(session);
 

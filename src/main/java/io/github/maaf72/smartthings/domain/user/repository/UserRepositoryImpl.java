@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.hibernate.SessionFactory;
+
 import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.domain.user.entity.User;
@@ -11,14 +13,16 @@ import io.github.maaf72.smartthings.domain.user.entity.User.Role;
 import io.github.maaf72.smartthings.domain.user.entity.UserWithTotalRegisteredDevices;
 import io.github.maaf72.smartthings.infra.database.BaseRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @ApplicationScoped
 @Slf4j
 public class UserRepositoryImpl extends BaseRepository<User, UUID> implements UserRepository {
   
-  public UserRepositoryImpl() {
-    super(User.class);
+  @Inject
+  public UserRepositoryImpl(SessionFactory sessionFactory) {
+    super(User.class, sessionFactory);
   }
 
   public Optional<User> findByEmail(String email) {

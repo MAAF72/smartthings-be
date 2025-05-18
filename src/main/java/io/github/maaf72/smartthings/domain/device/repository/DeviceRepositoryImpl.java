@@ -3,16 +3,20 @@ package io.github.maaf72.smartthings.domain.device.repository;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.SessionFactory;
+
 import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.infra.database.BaseRepository;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class DeviceRepositoryImpl extends BaseRepository<Device, UUID> implements DeviceRepository {
 
-  public DeviceRepositoryImpl() {
-    super(Device.class);
+  @Inject
+  public DeviceRepositoryImpl(SessionFactory sessionFactory) {
+    super(Device.class, sessionFactory);
   }
 
   public List<Device> findAllAvailableDevice(PaginationRequest page) {
