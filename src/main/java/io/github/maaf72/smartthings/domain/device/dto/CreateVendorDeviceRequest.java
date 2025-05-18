@@ -11,7 +11,7 @@ import lombok.Data;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class CreateDeviceRequest {
+public class CreateVendorDeviceRequest {
   @NotBlank
   private String brandName;
   @NotBlank

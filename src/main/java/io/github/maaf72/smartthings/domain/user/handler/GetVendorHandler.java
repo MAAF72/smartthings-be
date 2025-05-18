@@ -42,7 +42,7 @@ import ratpack.core.jackson.Jackson;
       @ApiResponse(
         responseCode = "200", 
         description = "success response", 
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = VendorResponse.class))
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = GetVendorHandler.GetVendorResponse.class))
       )
     }
   )
@@ -60,10 +60,16 @@ public class GetVendorHandler implements Handler {
 
     User user = userUsecase.getUser(userClaims.getId(), userClaims.getRole(), userId);
 
-    ctx.render(Jackson.json(BaseResponse.of(
-      true,
-      "vendor retrieved",
-      CustomObjectMapper.getObjectMapper().convertValue(user, VendorResponse.class)
-    )));
+    ctx.render(Jackson.json(new GetVendorResponse(user)));
+  }
+
+  class GetVendorResponse extends BaseResponse<VendorResponse> {
+    GetVendorResponse(User user) {
+      super(
+        true,
+        "vendor retrieved",
+        CustomObjectMapper.getObjectMapper().convertValue(user, VendorResponse.class)
+      );
+    }
   }
 }

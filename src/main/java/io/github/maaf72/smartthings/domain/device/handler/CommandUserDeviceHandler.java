@@ -3,8 +3,9 @@ package io.github.maaf72.smartthings.domain.device.handler;
 import java.util.UUID;
 
 import io.github.maaf72.smartthings.domain.common.dto.BaseResponse;
+import io.github.maaf72.smartthings.domain.device.dto.CommandUserDeviceRequest;
 import io.github.maaf72.smartthings.domain.device.dto.DeviceResponse;
-import io.github.maaf72.smartthings.domain.device.dto.UpdateDeviceRequest;
+import io.github.maaf72.smartthings.domain.device.dto.UpdateVendorDeviceRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.domain.device.usecase.DeviceUsecase;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
@@ -43,13 +44,13 @@ import ratpack.core.jackson.Jackson;
     },
     requestBody = @RequestBody(
       required = true, 
-      content = @Content(mediaType = "application/json", schema = @Schema(implementation = UpdateDeviceRequest.class))
+      content = @Content(mediaType = "application/json", schema = @Schema(implementation = CommandUserDeviceRequest.class))
     ),
     responses = {
       @ApiResponse(
         responseCode = "200", 
         description = "success response", 
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeviceResponse.class))
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = CommandUserDeviceHandler.CommandUserDeviceResponse.class))
       )
     }
   )
@@ -61,20 +62,29 @@ public class CommandUserDeviceHandler implements Handler {
 
   @Override
   public void handle(Context ctx) throws Exception {
-    ctx.parse(Jackson.fromJson(UpdateDeviceRequest.class)).then(request -> {
+    ctx.parse(Jackson.fromJson(CommandUserDeviceRequest.class)).then(request -> {
       ValidationUtil.validateOrThrow(request);
 
       UserClaims userClaims = ctx.get(UserClaims.class);
 
       UUID deviceId = UUID.fromString(ctx.getPathTokens().get("id"));
 
-      Device device = deviceUsecase.updateDevice(userClaims.getId(), userClaims.getRole(), request, deviceId);
+      UpdateVendorDeviceRequest updateVendorDeviceRequest = new UpdateVendorDeviceRequest();
+      updateVendorDeviceRequest.setValue(request.getValue());
 
-      ctx.render(Jackson.json(BaseResponse.of(
+      Device device = deviceUsecase.updateDevice(userClaims.getId(), userClaims.getRole(), updateVendorDeviceRequest, deviceId);
+
+      ctx.render(Jackson.json(new CommandUserDeviceResponse(device)));
+    });
+  }
+
+  class CommandUserDeviceResponse extends BaseResponse<DeviceResponse> {
+    CommandUserDeviceResponse(Device device) {
+      super(
         true,
         "device commanded",
         CustomObjectMapper.getObjectMapper().convertValue(device, DeviceResponse.class)
-      )));
-    });
+      );
+    }
   }
 }

@@ -1,7 +1,7 @@
 package io.github.maaf72.smartthings.domain.device.handler;
 
 import io.github.maaf72.smartthings.domain.common.dto.BaseResponse;
-import io.github.maaf72.smartthings.domain.device.dto.CreateDeviceRequest;
+import io.github.maaf72.smartthings.domain.device.dto.CreateVendorDeviceRequest;
 import io.github.maaf72.smartthings.domain.device.dto.DeviceResponse;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.domain.device.usecase.DeviceUsecase;
@@ -33,13 +33,13 @@ import ratpack.core.jackson.Jackson;
     description = "Create Vendor Device",
     requestBody = @RequestBody(
       required = true, 
-      content = @Content(mediaType = "application/json", schema = @Schema(implementation = CreateDeviceRequest.class))
+      content = @Content(mediaType = "application/json", schema = @Schema(implementation = CreateVendorDeviceRequest.class))
     ),
     responses = {
       @ApiResponse(
         responseCode = "200", 
         description = "success response", 
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeviceResponse.class))
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = CreateVendorDeviceHandler.CreateVendorDeviceResponse.class))
       )
     }
   )
@@ -51,18 +51,24 @@ public class CreateVendorDeviceHandler implements Handler {
 
   @Override
   public void handle(Context ctx) throws Exception {
-    ctx.parse(Jackson.fromJson(CreateDeviceRequest.class)).then(request -> {
+    ctx.parse(Jackson.fromJson(CreateVendorDeviceRequest.class)).then(request -> {
       ValidationUtil.validateOrThrow(request);
 
       UserClaims userClaims = ctx.get(UserClaims.class);
 
       Device device = deviceUsecase.createDevice(userClaims.getId(), userClaims.getRole(), request);
       
-      ctx.render(Jackson.json(BaseResponse.of(
+      ctx.render(Jackson.json(new CreateVendorDeviceResponse(device)));
+    });
+  }
+
+  class CreateVendorDeviceResponse extends BaseResponse<DeviceResponse> {
+    CreateVendorDeviceResponse(Device device) {
+      super(
         true,
         "device created",
         CustomObjectMapper.getObjectMapper().convertValue(device, DeviceResponse.class)
-      )));
-    });
+      );
+    }
   }
 }

@@ -9,8 +9,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.github.maaf72.smartthings.domain.auditlog.entity.AuditLog;
 import io.github.maaf72.smartthings.domain.auditlog.repository.AuditLogRepository;
 import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
-import io.github.maaf72.smartthings.domain.device.dto.CreateDeviceRequest;
-import io.github.maaf72.smartthings.domain.device.dto.UpdateDeviceRequest;
+import io.github.maaf72.smartthings.domain.device.dto.CreateVendorDeviceRequest;
+import io.github.maaf72.smartthings.domain.device.dto.UpdateVendorDeviceRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.domain.device.entity.Device.DeviceConfiguration;
 import io.github.maaf72.smartthings.domain.device.repository.DeviceRepository;
@@ -42,7 +42,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
   @Inject
   TranslationService translationService;
 
-  public Device createDevice(UUID actorId, Role role, CreateDeviceRequest request) {
+  public Device createDevice(UUID actorId, Role role, CreateVendorDeviceRequest request) {
     if (!role.equals(Role.DEVICE_VENDOR)) {
       throw new HttpException(403, "you are not allowed to create a device");
     }
@@ -122,7 +122,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
     return device; 
   }
 
-  public Device updateDevice(UUID actorId, Role role, UpdateDeviceRequest request, UUID deviceId) {
+  public Device updateDevice(UUID actorId, Role role, UpdateVendorDeviceRequest request, UUID deviceId) {
     Device device = repository.findById(deviceId).orElseThrow(() -> new HttpException(404, "device not found"));
 
     boolean isAllowed = 

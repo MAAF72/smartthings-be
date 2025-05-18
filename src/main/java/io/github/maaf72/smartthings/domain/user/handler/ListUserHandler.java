@@ -71,16 +71,23 @@ public class ListUserHandler implements Handler {
 
     long totalUser = userUsecase.countUsers();
 
-    ctx.render(Jackson.json(PaginationResponse.of(
-      true,
-      "users retrieved",
-      listUser.stream().map(user -> {
-        UserWithSummaryResponse x = CustomObjectMapper.getObjectMapper().convertValue(user.getUser(), UserWithSummaryResponse.class);
-        x.setTotalRegisteredDevices(user.getTotalRegisteredDevices());
-        return x;
-      }).toList(),
-      totalUser,
-      page
-    )));
+    ctx.render(Jackson.json(new ListVendorResponse(listUser, totalUser, page)));
+  }
+
+  class ListVendorResponse extends PaginationResponse<UserWithSummaryResponse> {
+    ListVendorResponse(List<UserWithTotalRegisteredDevices> listUser, long totalUser, PaginationRequest page) {
+      super(
+        true, 
+        "users retrieved", 
+        listUser.stream().map(vendor -> {
+          UserWithSummaryResponse x = CustomObjectMapper.getObjectMapper().convertValue(vendor.getUser(), UserWithSummaryResponse.class);
+          x.setTotalRegisteredDevices(vendor.getTotalRegisteredDevices());
+          return x;
+        }).toList(),
+        page.page, 
+        page.size, 
+        totalUser
+      );
+    }
   }
 }

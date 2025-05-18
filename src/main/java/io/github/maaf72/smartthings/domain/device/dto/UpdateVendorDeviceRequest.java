@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class UpdateDeviceRequest {
+public class UpdateVendorDeviceRequest {
   @Nullable
   private String brandName;
   @Nullable

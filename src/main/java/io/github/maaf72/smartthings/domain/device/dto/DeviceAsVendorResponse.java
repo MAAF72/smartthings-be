@@ -10,6 +10,6 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class DeviceAsVendorResponse extends DeviceResponse {
-  private BasicUserResponse registeredBy;
+  private GeneralUserResponse registeredBy;
 }
   

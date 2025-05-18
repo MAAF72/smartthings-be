@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import io.github.maaf72.smartthings.domain.common.dto.BaseResponse;
 import io.github.maaf72.smartthings.domain.device.dto.DeviceResponse;
-import io.github.maaf72.smartthings.domain.device.dto.UpdateDeviceRequest;
+import io.github.maaf72.smartthings.domain.device.dto.UpdateVendorDeviceRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.domain.device.usecase.DeviceUsecase;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
@@ -43,13 +43,13 @@ import ratpack.core.jackson.Jackson;
     },
     requestBody = @RequestBody(
       required = true, 
-      content = @Content(mediaType = "application/json", schema = @Schema(implementation = UpdateDeviceRequest.class))
+      content = @Content(mediaType = "application/json", schema = @Schema(implementation = UpdateVendorDeviceRequest.class))
     ),
     responses = {
       @ApiResponse(
         responseCode = "200", 
         description = "success response", 
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = DeviceResponse.class))
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = UpdateVendorDeviceHandler.UpdateVendorDeviceResponse.class))
       )
     }
   )
@@ -61,7 +61,7 @@ public class UpdateVendorDeviceHandler implements Handler {
 
   @Override
   public void handle(Context ctx) throws Exception {
-    ctx.parse(Jackson.fromJson(UpdateDeviceRequest.class)).then(request -> {
+    ctx.parse(Jackson.fromJson(UpdateVendorDeviceRequest.class)).then(request -> {
       ValidationUtil.validateOrThrow(request);
 
       UserClaims userClaims = ctx.get(UserClaims.class);
@@ -70,11 +70,17 @@ public class UpdateVendorDeviceHandler implements Handler {
 
       Device device = deviceUsecase.updateDevice(userClaims.getId(), userClaims.getRole(), request, deviceId);
 
-      ctx.render(Jackson.json(BaseResponse.of(
+      ctx.render(Jackson.json(new UpdateVendorDeviceResponse(device)));
+    });
+  }
+
+  class UpdateVendorDeviceResponse extends BaseResponse<DeviceResponse> {
+    UpdateVendorDeviceResponse(Device device) {
+      super(
         true,
         "device updated",
         CustomObjectMapper.getObjectMapper().convertValue(device, DeviceResponse.class)
-      )));
-    });
+      );
+    }
   }
 }

@@ -47,7 +47,7 @@ import ratpack.core.jackson.Jackson;
       @ApiResponse(
         responseCode = "200", 
         description = "success response", 
-        content = @Content(mediaType = "application/json", schema = @Schema(allOf = {PaginationResponse.class, DeviceAsVendorResponse.class}))
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ListVendorDeviceHandler.ListVendorDeviceResponse.class))
       )
     }
   )
@@ -70,12 +70,19 @@ public class ListVendorDeviceHandler implements Handler {
 
     long totalDevice = deviceUsecase.countDevice(userClaims.getId(), userClaims.getRole());
 
-    ctx.render(Jackson.json(PaginationResponse.of(
-      true,
-      "vendor devices retrieved",
-      listDevice.stream().map(device ->  CustomObjectMapper.getObjectMapper().convertValue(device, DeviceAsVendorResponse.class)).toList(),
-      totalDevice,
-      page
-    )));
+    ctx.render(Jackson.json(new ListVendorDeviceResponse(listDevice, totalDevice, page)));
+  }
+
+  class ListVendorDeviceResponse extends PaginationResponse<DeviceAsVendorResponse> {
+    ListVendorDeviceResponse(List<Device> listDevice, long totalDevice, PaginationRequest page) {
+      super(
+        true, 
+        "vendor devices retrieved", 
+        listDevice.stream().map(device ->  CustomObjectMapper.getObjectMapper().convertValue(device, DeviceAsVendorResponse.class)).toList(),
+        page.page, 
+        page.size, 
+        totalDevice
+      );
+    }
   }
 }

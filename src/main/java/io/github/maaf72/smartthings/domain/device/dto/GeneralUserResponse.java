@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class BasicUserResponse {
+public class GeneralUserResponse {
   private UUID id;
   private String email;
   private String name;

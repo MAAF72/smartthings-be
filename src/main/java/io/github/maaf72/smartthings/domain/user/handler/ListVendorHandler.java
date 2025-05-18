@@ -4,7 +4,6 @@ import java.util.List;
 
 import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.common.dto.PaginationResponse;
-import io.github.maaf72.smartthings.domain.user.dto.VendorResponse;
 import io.github.maaf72.smartthings.domain.user.dto.VendorWithSummaryResponse;
 import io.github.maaf72.smartthings.domain.user.entity.UserWithTotalRegisteredDevices;
 import io.github.maaf72.smartthings.domain.user.usecase.UserUsecase;
@@ -48,7 +47,7 @@ import ratpack.core.jackson.Jackson;
       @ApiResponse(
         responseCode = "200", 
         description = "success response", 
-        content = @Content(mediaType = "application/json", schema = @Schema(allOf = {PaginationResponse.class, VendorResponse.class}))
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ListVendorHandler.ListVendorResponse.class))
       )
     }
   )
@@ -71,16 +70,23 @@ public class ListVendorHandler implements Handler {
 
     long totalVendor = userUsecase.countVendors();
 
-    ctx.render(Jackson.json(PaginationResponse.of(
-      true,
-      "vendors retrieved",
-      listVendor.stream().map(vendor -> {
-        VendorWithSummaryResponse x = CustomObjectMapper.getObjectMapper().convertValue(vendor.getUser(), VendorWithSummaryResponse.class);
-        x.setTotalRegisteredDevices(vendor.getTotalRegisteredDevices());
-        return x;
-      }).toList(),
-      totalVendor,
-      page
-    )));
+    ctx.render(Jackson.json(new ListVendorResponse(listVendor, totalVendor, page)));
+  }
+
+  class ListVendorResponse extends PaginationResponse<VendorWithSummaryResponse> {
+    ListVendorResponse(List<UserWithTotalRegisteredDevices> listVendor, long totalVendor, PaginationRequest page) {
+      super(
+        true, 
+        "vendors retrieved", 
+        listVendor.stream().map(vendor -> {
+          VendorWithSummaryResponse x = CustomObjectMapper.getObjectMapper().convertValue(vendor.getUser(), VendorWithSummaryResponse.class);
+          x.setTotalRegisteredDevices(vendor.getTotalRegisteredDevices());
+          return x;
+        }).toList(),
+        page.page, 
+        page.size, 
+        totalVendor
+      );
+    }
   }
 }
