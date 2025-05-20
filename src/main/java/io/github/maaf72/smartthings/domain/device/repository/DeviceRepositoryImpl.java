@@ -3,11 +3,12 @@ package io.github.maaf72.smartthings.domain.device.repository;
 import java.util.List;
 import java.util.UUID;
 
-import org.hibernate.SessionFactory;
+import org.hibernate.reactive.mutiny.Mutiny.SessionFactory;
 
 import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.infra.database.BaseRepository;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -19,27 +20,27 @@ public class DeviceRepositoryImpl extends BaseRepository<Device, UUID> implement
     super(Device.class, sessionFactory);
   }
 
-  public List<Device> findAllAvailableDevice(PaginationRequest page) {
+  public Uni<List<Device>> findAllAvailableDevice(PaginationRequest page) {
     return findAll((cb, root) -> cb.isNull(root.get("registeredBy")), page);
   }
 
-  public long countAllAvailableDevice() {
+  public Uni<Long> countAllAvailableDevice() {
    return countAll((cb, root) -> cb.isNull(root.get("registeredBy")));
   }
 
-  public List<Device> findAllVendorDevice(UUID vendorId, PaginationRequest page) {
+  public Uni<List<Device>> findAllVendorDevice(UUID vendorId, PaginationRequest page) {
     return findAll((cb, root) -> cb.equal(root.get("createdBy").get("id"), vendorId), page);
   }
 
-  public long countAllVendorDevice(UUID vendorId) {
+  public Uni<Long> countAllVendorDevice(UUID vendorId) {
     return countAll((cb, root) -> cb.equal(root.get("createdBy").get("id"), vendorId));
   }
 
-  public List<Device> findAllUserDevice(UUID userId, PaginationRequest page) {
+  public Uni<List<Device>> findAllUserDevice(UUID userId, PaginationRequest page) {
     return findAll((cb, root) -> cb.equal(root.get("registeredBy").get("id"), userId), page);
   }
 
-  public long countAllUserDevice(UUID userId) {
+  public Uni<Long>  countAllUserDevice(UUID userId) {
     return countAll((cb, root) -> cb.equal(root.get("registeredBy").get("id"), userId));
   }
 }

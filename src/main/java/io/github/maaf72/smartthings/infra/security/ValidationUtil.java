@@ -3,6 +3,7 @@ package io.github.maaf72.smartthings.infra.security;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.smallrye.mutiny.Uni;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidationException;
@@ -25,5 +26,16 @@ public class ValidationUtil {
 
       throw new ValidationException(errorMessages);
     }
+  }
+
+  public static <T> Uni<Void> validateAsync(T object) {
+    return Uni.createFrom().emitter(emitter -> {
+      try {
+        validateOrThrow(object);
+        emitter.complete(null);
+      } catch (ValidationException e) {
+        emitter.fail(e);
+      }
+    });
   }
 }

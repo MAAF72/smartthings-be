@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import ratpack.core.handling.Context;
 import ratpack.core.handling.Handler;
 import ratpack.core.jackson.Jackson;
+import ratpack.exec.Promise;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -68,9 +69,12 @@ public class UpdateVendorDeviceHandler implements Handler {
 
       UUID deviceId = UUID.fromString(ctx.getPathTokens().get("id"));
 
-      Device device = deviceUsecase.updateDevice(userClaims.getId(), userClaims.getRole(), request, deviceId);
-
-      ctx.render(Jackson.json(new UpdateVendorDeviceResponse(device)));
+      Promise.async(downstream ->
+        deviceUsecase.updateDevice(userClaims.getId(), userClaims.getRole(), request, deviceId).subscribe().with(
+          device -> downstream.success(Jackson.json(new UpdateVendorDeviceResponse(device))),
+          failure -> downstream.error(failure)
+        )
+      ).then(ctx::render);
     });
   }
 

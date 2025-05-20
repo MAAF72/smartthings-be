@@ -10,19 +10,20 @@ import io.github.maaf72.smartthings.domain.user.entity.User;
 import io.github.maaf72.smartthings.domain.user.entity.User.Role;
 import io.github.maaf72.smartthings.domain.user.entity.UserWithTotalRegisteredDevices;
 import io.github.maaf72.smartthings.itf.AppUsecaseItf;
+import io.smallrye.mutiny.Uni;
 
 public interface UserUsecase extends AppUsecaseItf {
-  List<UserWithTotalRegisteredDevices> listUserWithTotalRegisteredDevices(UUID actorId, Role role, PaginationRequest page);
+  Uni<List<UserWithTotalRegisteredDevices>> listUserWithTotalRegisteredDevices(UUID actorId, Role role, PaginationRequest page);
   
-  long countUsers();
+  Uni<Long> countUsers();
 
-  List<UserWithTotalRegisteredDevices> listVendorWithTotalRegisteredDevices(UUID actorId, Role role, PaginationRequest page);
+  Uni<List<UserWithTotalRegisteredDevices>> listVendorWithTotalRegisteredDevices(UUID actorId, Role role, PaginationRequest page);
   
-  long countVendors();
+  Uni<Long> countVendors();
 
-  User getUser(UUID actorId, Role role, UUID userId);
+  Uni<User> getUser(UUID actorId, Role role, UUID userId);
 
-  User register(RegisterRequest request);
+  Uni<User> register(RegisterRequest request);
 
-  String login(LoginRequest request);
+  Uni<String> login(LoginRequest request);
 }

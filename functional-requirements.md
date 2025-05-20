@@ -9,4 +9,3 @@
 9) Smartthings Administrator can get the list of all vendor's devices with the number of registered users on the device.
 10) Smartthings Administrator can get the list of all Smartthings users with the number of registered devices. 
 11) Smartthings Administrator can see user's information.
-

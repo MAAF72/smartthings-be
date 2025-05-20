@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import ratpack.core.handling.Context;
 import ratpack.core.handling.Handler;
 import ratpack.core.jackson.Jackson;
+import ratpack.exec.Promise;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -56,9 +57,12 @@ public class CreateVendorDeviceHandler implements Handler {
 
       UserClaims userClaims = ctx.get(UserClaims.class);
 
-      Device device = deviceUsecase.createDevice(userClaims.getId(), userClaims.getRole(), request);
-      
-      ctx.render(Jackson.json(new CreateVendorDeviceResponse(device)));
+      Promise.async(downstream ->
+        deviceUsecase.createDevice(userClaims.getId(), userClaims.getRole(), request).subscribe().with(
+          device -> downstream.success(Jackson.json(new CreateVendorDeviceResponse(device))),
+          failure -> downstream.error(failure)
+        )
+      ).then(ctx::render);
     });
   }
 

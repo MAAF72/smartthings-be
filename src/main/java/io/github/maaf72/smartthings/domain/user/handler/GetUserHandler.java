@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import ratpack.core.handling.Context;
 import ratpack.core.handling.Handler;
 import ratpack.core.jackson.Jackson;
+import ratpack.exec.Promise;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -57,9 +58,12 @@ public class GetUserHandler implements Handler {
 
     UUID userId = UUID.fromString(ctx.getPathTokens().get("id"));
 
-    User user = userUsecase.getUser(userClaims.getId(), userClaims.getRole(), userId);
-
-    ctx.render(Jackson.json(new GetUserResponse(user)));
+    Promise.async(downstream ->
+      userUsecase.getUser(userClaims.getId(), userClaims.getRole(), userId).subscribe().with(
+        user -> downstream.success(Jackson.json(new GetUserResponse(user))),
+        failure -> downstream.error(failure)
+      )
+    ).then(ctx::render);
   }
 
   class GetUserResponse extends BaseResponse<UserResponse> {

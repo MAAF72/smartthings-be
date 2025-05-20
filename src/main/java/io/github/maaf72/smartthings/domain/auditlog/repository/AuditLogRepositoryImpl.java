@@ -2,7 +2,7 @@ package io.github.maaf72.smartthings.domain.auditlog.repository;
 
 import java.util.UUID;
 
-import org.hibernate.SessionFactory;
+import org.hibernate.reactive.mutiny.Mutiny.SessionFactory;
 
 import io.github.maaf72.smartthings.domain.auditlog.entity.AuditLog;
 import io.github.maaf72.smartthings.infra.database.BaseRepository;

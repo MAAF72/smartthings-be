@@ -3,9 +3,10 @@ package io.github.maaf72.smartthings.infra.thirdapi.translation;
 import java.util.List;
 
 import io.github.maaf72.smartthings.infra.thirdapi.translation.dto.TranslationResponse;
+import io.smallrye.mutiny.Uni;
 
 public interface TranslationService {
-  String SingleCountryTranslate(String text, String countryID);
+  Uni<String> SingleCountryTranslate(String text, String countryID);
 
-  List<TranslationResponse> AllCountryTranslate(String text);
+  Uni<List<TranslationResponse>> AllCountryTranslate(String text);
 }

@@ -10,6 +10,7 @@ import io.github.maaf72.smartthings.domain.user.usecase.UserUsecase;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
+import io.smallrye.mutiny.Uni;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import ratpack.core.handling.Context;
 import ratpack.core.handling.Handler;
 import ratpack.core.jackson.Jackson;
+import ratpack.exec.Promise;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -66,11 +68,15 @@ public class ListVendorHandler implements Handler {
       ctx.getRequest().getQueryParams().get("size")
     );
 
-    List<UserWithTotalRegisteredDevices> listVendor = userUsecase.listVendorWithTotalRegisteredDevices(userClaims.getId(), userClaims.getRole(), page);
-
-    long totalVendor = userUsecase.countVendors();
-
-    ctx.render(Jackson.json(new ListVendorResponse(listVendor, totalVendor, page)));
+    Promise.async(downstream ->
+      Uni.combine().all().unis(
+        userUsecase.listVendorWithTotalRegisteredDevices(userClaims.getId(), userClaims.getRole(), page),
+        userUsecase.countVendors()
+      ).asTuple().subscribe().with(
+        data -> downstream.success(Jackson.json(new ListVendorResponse(data.getItem1(), data.getItem2(), page))),
+        failure -> downstream.error(failure)
+      )
+    ).then(ctx::render);
   }
 
   class ListVendorResponse extends PaginationResponse<VendorWithSummaryResponse> {

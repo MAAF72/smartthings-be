@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import ratpack.core.handling.Context;
 import ratpack.core.handling.Handler;
 import ratpack.core.jackson.Jackson;
+import ratpack.exec.Promise;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -44,10 +45,13 @@ public class GetProfileHandler implements Handler {
   @Override
   public void handle(Context ctx) throws Exception {
     UserClaims userClaims = ctx.get(UserClaims.class);
-
-    User user = userUsecase.getUser(userClaims.getId(), userClaims.getRole(), userClaims.getId());
-
-    ctx.render(Jackson.json(new GetProfileResponse(user)));
+    
+    Promise.async(downstream ->
+      userUsecase.getUser(userClaims.getId(), userClaims.getRole(), userClaims.getId()).subscribe().with(
+        user -> downstream.success(Jackson.json(new GetProfileResponse(user))),
+        failure -> downstream.error(failure)
+      )
+    ).then(ctx::render);
   }
 
   class GetProfileResponse extends BaseResponse<ProfileResponse> {

@@ -1,22 +1,22 @@
 package io.github.maaf72.smartthings.domain.user.repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.user.entity.User;
 import io.github.maaf72.smartthings.domain.user.entity.UserWithTotalRegisteredDevices;
 import io.github.maaf72.smartthings.itf.AppRepositoryItf;
+import io.smallrye.mutiny.Uni;
 
 public interface UserRepository extends AppRepositoryItf<User, UUID> {
-  Optional<User> findByEmail(String email);
+  Uni<User> findByEmail(String email);
 
-  List<UserWithTotalRegisteredDevices> findAllUserWithTotalRegisteredDevices(PaginationRequest page);
+  Uni<List<UserWithTotalRegisteredDevices>> findAllUserWithTotalRegisteredDevices(PaginationRequest page);
 
-  long countAllUser();
+  Uni<Long> countAllUser();
   
-  List<UserWithTotalRegisteredDevices> findAllVendorWithTotalRegisteredDevices(PaginationRequest page);
+  Uni<List<UserWithTotalRegisteredDevices>> findAllVendorWithTotalRegisteredDevices(PaginationRequest page);
 
-  long countAllVendor();
+  Uni<Long> countAllVendor();
 }

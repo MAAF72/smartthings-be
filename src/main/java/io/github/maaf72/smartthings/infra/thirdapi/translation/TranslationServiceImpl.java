@@ -1,26 +1,33 @@
 package io.github.maaf72.smartthings.infra.thirdapi.translation;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import io.github.maaf72.smartthings.infra.thirdapi.translation.dto.TranslationResponse;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class TranslationServiceImpl implements TranslationService {
   private static final String[] LIST_COUNTRY_ID = { "en", "id", "my", "jp" };
 
-  public String SingleCountryTranslate(String text, String countryID) {
-    return "[%s] %s".formatted(countryID, text);
+  public Uni<String> SingleCountryTranslate(String text, String countryID) {
+    return Uni.createFrom().item(() -> 
+        "[%s] %s".formatted(countryID, text)
+    ).runSubscriptionOn(Infrastructure.getDefaultWorkerPool()); 
   }
 
-  public List<TranslationResponse> AllCountryTranslate(String text) {
-    List<TranslationResponse> listTranslationResponse = new ArrayList<>();
-
-    for (String countryId : LIST_COUNTRY_ID) {
-      listTranslationResponse.add(new TranslationResponse(countryId, SingleCountryTranslate(text, countryId)));
-    }
-
-    return listTranslationResponse;
+  public Uni<List<TranslationResponse>> AllCountryTranslate(String text) {
+    return Uni.combine().all().unis(
+      Arrays.stream(LIST_COUNTRY_ID)
+        .map(countryId -> SingleCountryTranslate(text, countryId)
+          .map(translatedText -> new TranslationResponse(countryId, translatedText))
+        )
+        .collect(Collectors.toList())
+    )
+    .with(TranslationResponse.class, Function.identity());
   }
 }

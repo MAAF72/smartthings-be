@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import ratpack.core.handling.Context;
 import ratpack.core.handling.Handler;
 import ratpack.core.jackson.Jackson;
+import ratpack.exec.Promise;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -55,11 +56,11 @@ public class RegisterUserDeviceHandler implements Handler {
 
     UUID deviceId = UUID.fromString(ctx.getPathTokens().get("id"));
 
-    deviceUsecase.registerDevice(userClaims.getId(), userClaims.getRole(), deviceId);
-
-    ctx.render(Jackson.json(BaseResponse.of(
-      true,
-      "device registered"
-    )));
+    Promise.async(downstream ->
+      deviceUsecase.registerDevice(userClaims.getId(), userClaims.getRole(), deviceId).subscribe().with(
+        success -> downstream.success(Jackson.json(BaseResponse.of(true, "device registered"))),
+        failure -> downstream.error(failure)
+      )
+    ).then(ctx::render);
   }
 }
