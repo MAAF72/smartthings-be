@@ -4,13 +4,14 @@ import java.util.List;
 
 import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.common.dto.PaginationResponse;
-import io.github.maaf72.smartthings.domain.user.dto.UserResponse;
 import io.github.maaf72.smartthings.domain.user.dto.UserWithSummaryResponse;
 import io.github.maaf72.smartthings.domain.user.entity.UserWithTotalRegisteredDevices;
+import io.github.maaf72.smartthings.domain.user.handler.ListUserHandler.ListUserResponse;
 import io.github.maaf72.smartthings.domain.user.usecase.UserUsecase;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
+import io.smallrye.mutiny.Uni;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import ratpack.core.handling.Context;
 import ratpack.core.handling.Handler;
 import ratpack.core.jackson.Jackson;
+import ratpack.exec.Promise;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -48,7 +50,7 @@ import ratpack.core.jackson.Jackson;
       @ApiResponse(
         responseCode = "200", 
         description = "success response", 
-        content = @Content(mediaType = "application/json", schema = @Schema(allOf = {PaginationResponse.class, UserResponse.class}))
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ListUserHandler.ListUserResponse.class))
       )
     }
   )
@@ -67,21 +69,25 @@ public class ListUserHandler implements Handler {
       ctx.getRequest().getQueryParams().get("size")
     );
 
-    List<UserWithTotalRegisteredDevices> listUser = userUsecase.listUserWithTotalRegisteredDevices(userClaims.getId(), userClaims.getRole(), page);
-
-    long totalUser = userUsecase.countUsers();
-
-    ctx.render(Jackson.json(new ListVendorResponse(listUser, totalUser, page)));
+    Promise.async(downstream -> 
+      Uni.combine().all().unis(
+        userUsecase.listUserWithTotalRegisteredDevices(userClaims.getId(), userClaims.getRole(), page),
+        userUsecase.countUsers()
+      ).asTuple().subscribe().with(
+        data -> downstream.success(Jackson.json(new ListUserResponse(data.getItem1(), data.getItem2(), page))),
+        failure -> downstream.error(failure)
+      )
+    ).then(ctx::render);
   }
 
-  class ListVendorResponse extends PaginationResponse<UserWithSummaryResponse> {
-    ListVendorResponse(List<UserWithTotalRegisteredDevices> listUser, long totalUser, PaginationRequest page) {
+  class ListUserResponse extends PaginationResponse<UserWithSummaryResponse> {
+    ListUserResponse(List<UserWithTotalRegisteredDevices> listUser, long totalUser, PaginationRequest page) {
       super(
         true, 
         "users retrieved", 
-        listUser.stream().map(vendor -> {
-          UserWithSummaryResponse x = CustomObjectMapper.getObjectMapper().convertValue(vendor.getUser(), UserWithSummaryResponse.class);
-          x.setTotalRegisteredDevices(vendor.getTotalRegisteredDevices());
+        listUser.stream().map(user -> {
+          UserWithSummaryResponse x = CustomObjectMapper.getObjectMapper().convertValue(user.getUser(), UserWithSummaryResponse.class);
+          x.setTotalRegisteredDevices(user.getTotalRegisteredDevices());
           return x;
         }).toList(),
         page.page, 

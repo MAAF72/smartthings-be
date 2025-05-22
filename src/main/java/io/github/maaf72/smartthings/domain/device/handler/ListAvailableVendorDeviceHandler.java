@@ -10,6 +10,7 @@ import io.github.maaf72.smartthings.domain.device.usecase.DeviceUsecase;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
+import io.smallrye.mutiny.Uni;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import ratpack.core.handling.Context;
 import ratpack.core.handling.Handler;
 import ratpack.core.jackson.Jackson;
+import ratpack.exec.Promise;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -66,10 +68,15 @@ public class ListAvailableVendorDeviceHandler implements Handler {
       ctx.getRequest().getQueryParams().get("size")
     );
 
-    List<Device> listAvailableDevice = deviceUsecase.listAvailableDevice(userClaims.getId(), page);
-
-    long totalAvailableDevice = deviceUsecase.countAvailableDevice();
-    ctx.render(Jackson.json(new ListAvailableDeviceResponse(listAvailableDevice, totalAvailableDevice, page)));
+    Promise.async(downstream -> 
+      Uni.combine().all().unis(
+        deviceUsecase.listAvailableDevice(userClaims.getId(), page),
+        deviceUsecase.countAvailableDevice()
+      ).asTuple().subscribe().with(
+        data -> downstream.success(Jackson.json(new ListAvailableDeviceResponse(data.getItem1(), data.getItem2(), page))),
+        failure -> downstream.error(failure)
+      )
+    ).then(ctx::render);
   }
 
   class ListAvailableDeviceResponse extends PaginationResponse<DeviceAsUserResponse> {

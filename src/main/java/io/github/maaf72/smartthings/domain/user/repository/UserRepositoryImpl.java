@@ -1,10 +1,9 @@
 package io.github.maaf72.smartthings.domain.user.repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-import org.hibernate.SessionFactory;
+import org.hibernate.reactive.mutiny.Mutiny.SessionFactory;
 
 import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
@@ -12,6 +11,7 @@ import io.github.maaf72.smartthings.domain.user.entity.User;
 import io.github.maaf72.smartthings.domain.user.entity.User.Role;
 import io.github.maaf72.smartthings.domain.user.entity.UserWithTotalRegisteredDevices;
 import io.github.maaf72.smartthings.infra.database.BaseRepository;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -25,19 +25,19 @@ public class UserRepositoryImpl extends BaseRepository<User, UUID> implements Us
     super(User.class, sessionFactory);
   }
 
-  public Optional<User> findByEmail(String email) {
+  public Uni<User> findByEmail(String email) {
     return findOne((cb, root) -> cb.equal(root.get("email"), email));
   }
   
-  public List<UserWithTotalRegisteredDevices> findAllUserWithTotalRegisteredDevices(PaginationRequest page) {
-    return doInSession(session -> {
+  public Uni<List<UserWithTotalRegisteredDevices>> findAllUserWithTotalRegisteredDevices(PaginationRequest page) {
+    return sessionFactory.withSession(session -> {
       String hql = """
         SELECT NEW %s(
           u,
           COUNT(d.id)
         )
         FROM %s u
-        LEFT JOIN %s d ON d.registeredBy = u
+        LEFT JOIN %s d ON d.registeredBy = u AND 1 = 1
         WHERE u.role = :role
         GROUP BY u
         """
@@ -50,19 +50,19 @@ public class UserRepositoryImpl extends BaseRepository<User, UUID> implements Us
     });
   }
   
-  public long countAllUser() {
+  public Uni<Long> countAllUser() {
     return countAll((cb, root) -> cb.equal(root.get("role"), Role.ST_USERS));
   }
 
-  public List<UserWithTotalRegisteredDevices> findAllVendorWithTotalRegisteredDevices(PaginationRequest page) {
-    return doInSession(session -> {
+  public Uni<List<UserWithTotalRegisteredDevices>> findAllVendorWithTotalRegisteredDevices(PaginationRequest page) {
+    return sessionFactory.withSession(session -> {
       String hql = """
         SELECT NEW %s(
             u,
             COUNT(d.id)
         )
         FROM %s u
-        LEFT JOIN %s d ON d.createdBy = u AND d.registeredBy IS NOT NULL
+        LEFT JOIN %s d ON d.createdBy = u AND d.registeredBy IS NOT NULL AND 1 = 1
         WHERE u.role = :role
         GROUP BY u
         """
@@ -75,7 +75,7 @@ public class UserRepositoryImpl extends BaseRepository<User, UUID> implements Us
     });
   }
   
-  public long countAllVendor() {
+  public Uni<Long> countAllVendor() {
     return countAll((cb, root) -> cb.equal(root.get("role"), Role.DEVICE_VENDOR));
   }
 }

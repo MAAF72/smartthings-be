@@ -4,19 +4,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.reactive.mutiny.Mutiny.SessionFactory;
+import org.hibernate.reactive.provider.ReactivePersistenceProvider;
+import org.hibernate.reactive.provider.ReactiveServiceRegistryBuilder;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexReader;
 
 import io.github.maaf72.smartthings.config.Config;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.enterprise.inject.spi.BeanManager;
@@ -38,16 +38,17 @@ public class HibernateUtil {
       AvailableSettings.JAKARTA_JDBC_URL, Config.APP_DATABASE_JDBC_URL,
       AvailableSettings.JAKARTA_JDBC_USER, Config.APP_DATABASE_USERNAME,
       AvailableSettings.JAKARTA_JDBC_PASSWORD, Config.APP_DATABASE_PASSWORD,
+      AvailableSettings.PHYSICAL_NAMING_STRATEGY, CamelCaseToUnderscoresNamingStrategy.class.getName(),
+      // "jakarta.persistence.provider", ReactivePersistenceProvider.class.getName(),
+      AvailableSettings.JAKARTA_CDI_BEAN_MANAGER, beanManager,
       AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, true,
       AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS, true,
-      AvailableSettings.PHYSICAL_NAMING_STRATEGY, CamelCaseToUnderscoresNamingStrategy.class.getName(),
-      AvailableSettings.JAKARTA_CDI_BEAN_MANAGER, beanManager,
       AvailableSettings.SHOW_SQL, true,
       AvailableSettings.FORMAT_SQL, true,
       AvailableSettings.HIGHLIGHT_SQL, true
     );
 
-  StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
+  StandardServiceRegistry registry = new ReactiveServiceRegistryBuilder()
     .applySettings(settings)
     .build();
 
@@ -73,7 +74,14 @@ public class HibernateUtil {
       metadataSources.addAnnotatedClassName(className);
     });
 
-    sessionFactory =  metadataSources.buildMetadata().buildSessionFactory();
+    sessionFactory =  metadataSources.buildMetadata().buildSessionFactory().unwrap(SessionFactory.class);
+  }
+
+  @PreDestroy
+  public void cleanup() {
+      if (sessionFactory != null) {
+          sessionFactory.close();
+      }
   }
 
   @Produces
@@ -85,15 +93,5 @@ public class HibernateUtil {
     if (sessionFactory == null) {
       throw new RuntimeException("Database not initialized");
     }
-  }
-
-  public String getTableName(final Class<?> cls) {
-    SessionFactoryImplementor sfi = sessionFactory.unwrap(SessionFactoryImplementor.class);
-    AbstractEntityPersister persister = (AbstractEntityPersister) sfi.getMappingMetamodel().getEntityDescriptor(cls);
-
-    String dirtyName = persister.getIdentifierTableName();
-    String cleanName = dirtyName.replace("\"", "");
-    
-    return cleanName;
   }
 }

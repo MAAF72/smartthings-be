@@ -6,17 +6,18 @@ import java.util.UUID;
 import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.device.entity.Device;
 import io.github.maaf72.smartthings.itf.AppRepositoryItf;
+import io.smallrye.mutiny.Uni;
 
 public interface DeviceRepository extends AppRepositoryItf<Device, UUID> {
-  List<Device> findAllAvailableDevice(PaginationRequest page);
+  Uni<List<Device>> findAllAvailableDevice(PaginationRequest page);
 
-  long countAllAvailableDevice();
+  Uni<Long> countAllAvailableDevice();
 
-  List<Device> findAllVendorDevice(UUID vendorId, PaginationRequest page);
+  Uni<List<Device>> findAllVendorDevice(UUID vendorId, PaginationRequest page);
   
-  long countAllVendorDevice(UUID vendorId);
+  Uni<Long> countAllVendorDevice(UUID vendorId);
 
-  List<Device> findAllUserDevice(UUID userId, PaginationRequest page);
+  Uni<List<Device>> findAllUserDevice(UUID userId, PaginationRequest page);
 
-  long countAllUserDevice(UUID userId);
+  Uni<Long> countAllUserDevice(UUID userId);
 }

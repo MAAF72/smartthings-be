@@ -25,17 +25,18 @@ import lombok.RequiredArgsConstructor;
 import ratpack.core.handling.Context;
 import ratpack.core.handling.Handler;
 import ratpack.core.jackson.Jackson;
+import ratpack.exec.Promise;
 
 @ApplicationScoped
 @RequiredArgsConstructor
 @ApiDoc(
-  path = "/vendor/devices/{id}", 
+  path = "/users/me/devices/{id}/commands", 
   operation = @Operation(
     method = "PUT",
-    tags = "Vendor", 
-    operationId = "UpdateVendorDevice",
-    summary = "Update Vendor Device",
-    description = "Update Vendor Device",
+    tags = "User", 
+    operationId = "CommandUserDevice",
+    summary = "Command User Device",
+    description = "Command User Device",
     parameters = {
       @Parameter(
         name = "id", description = "device id", required = true, in = ParameterIn.PATH,
@@ -72,9 +73,12 @@ public class CommandUserDeviceHandler implements Handler {
       UpdateVendorDeviceRequest updateVendorDeviceRequest = new UpdateVendorDeviceRequest();
       updateVendorDeviceRequest.setValue(request.getValue());
 
-      Device device = deviceUsecase.updateDevice(userClaims.getId(), userClaims.getRole(), updateVendorDeviceRequest, deviceId);
-
-      ctx.render(Jackson.json(new CommandUserDeviceResponse(device)));
+      Promise.async(downstream ->
+        deviceUsecase.updateDevice(userClaims.getId(), userClaims.getRole(), updateVendorDeviceRequest, deviceId).subscribe().with(
+          device -> downstream.success(Jackson.json(new CommandUserDeviceResponse(device))),
+          failure -> downstream.error(failure)
+        )
+      ).then(ctx::render);
     });
   }
 

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SoftDelete;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 import io.github.maaf72.smartthings.domain.device.entity.Device;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -36,8 +38,8 @@ import lombok.ToString;
 @Table(name = "users")
 @ToString(exclude = { "createdDevices", "registeredDevices" })
 @DynamicUpdate
-@SoftDelete
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@SoftDelete
 public class User implements Serializable {
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -56,11 +58,13 @@ public class User implements Serializable {
   @OneToMany(mappedBy = "createdBy", fetch = FetchType.EAGER)
   @OrderBy("createdAt ASC")
   @JsonIgnoreProperties({ "created_by", "registered_by" })
+  @SQLRestriction("deleted = false")
   private List<Device> createdDevices;
 
-  @OneToMany(mappedBy = "registeredBy", fetch = FetchType.EAGER)
+  @OneToMany(mappedBy = "registeredBy", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
   @OrderBy("registeredAt ASC")
   @JsonIgnoreProperties({ "created_by", "registered_by" })
+  @SQLRestriction("deleted = false")
   private List<Device> registeredDevices;
 
   @Column(updatable = false)

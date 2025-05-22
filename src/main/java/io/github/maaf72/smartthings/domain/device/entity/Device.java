@@ -33,8 +33,8 @@ import lombok.ToString;
 @Table(name = "devices")
 @ToString(exclude = { "createdBy", "registeredBy" })
 @DynamicUpdate
-@SoftDelete
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@SoftDelete
 public class Device implements Serializable {
 
   @Id
