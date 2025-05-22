@@ -12,6 +12,8 @@ buildscript {
 
 plugins {
 	id 'application'
+  id 'com.github.ben-manes.versions' version '0.52.0'
+  id 'nebula.lint' version '20.5.8'
 	id 'io.ratpack.ratpack-java' version '2.0.0-rc-1'
   id 'org.flywaydb.flyway' version '11.8.0'
   id 'org.kordamp.gradle.jandex' version '2.1.0'
@@ -19,23 +21,24 @@ plugins {
 
 dependencies {
   implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-  implementation 'io.smallrye:jandex:3.3.0'
+  implementation 'io.smallrye:jandex:3.3.1'
   implementation 'jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0'
-  implementation 'org.jboss.weld.se:weld-se-core:6.0.2.Final'
+  implementation 'org.jboss.weld.se:weld-se-core:6.0.3.Final'
   implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.0'
-  implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate6:2.19.0'
   implementation 'com.password4j:password4j:1.8.3'
-  implementation 'io.vertx:vertx-core:5.0.0'
-  implementation 'org.hibernate.reactive:hibernate-reactive-core:2.4.8.Final'
-  implementation 'io.vertx:vertx-pg-client:5.0.0'
-  implementation 'org.hibernate.validator:hibernate-validator:8.0.2.Final'
+  implementation 'org.hibernate.reactive:hibernate-reactive-core:3.0.0.Final'
+  implementation 'io.vertx:vertx-pg-client:4.5.15'
+  implementation 'org.hibernate.validator:hibernate-validator:9.0.0.Final'
+  implementation 'com.ongres.scram:client:2.1'
   implementation 'jakarta.validation:jakarta.validation-api:3.1.1'
   implementation 'org.glassfish.expressly:expressly:5.0.0'
   implementation 'org.modelmapper:modelmapper:3.2.3'
-  implementation 'io.swagger.core.v3:swagger-core-jakarta:2.2.30'
-  implementation 'io.swagger.core.v3:swagger-annotations-jakarta:2.2.30'
-  implementation 'io.swagger.core.v3:swagger-models-jakarta:2.2.30'
-  implementation 'com.ongres.scram:client:2.1'
+  implementation 'io.swagger.core.v3:swagger-core-jakarta:2.2.32'
+  implementation 'io.swagger.core.v3:swagger-annotations-jakarta:2.2.32'
+  implementation 'io.swagger.core.v3:swagger-models-jakarta:2.2.32'
+  implementation 'io.opentelemetry:opentelemetry-api:1.50.0'
+  implementation 'io.opentelemetry:opentelemetry-exporter-otlp:1.50.0'
+  implementation 'io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.16.0'
 
   runtimeOnly 'org.slf4j:slf4j-simple:2.0.17'
   runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
@@ -47,11 +50,11 @@ dependencies {
 }
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_21
-  targetCompatibility = JavaVersion.VERSION_21
+  sourceCompatibility = JavaVersion.VERSION_23
+  targetCompatibility = JavaVersion.VERSION_23
 
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(23)
 	}
 }
 
@@ -92,7 +95,7 @@ def loadEnvFile() {
 def env = loadEnvFile()
 
 jandex {
-  version = '3.3.0'
+  version = '3.3.1'
 }
 
 

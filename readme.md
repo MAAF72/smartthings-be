@@ -1,14 +1,14 @@
 ## Technology Stack
 
 ### Core Components
-- **Language**: Java 21
-- **Build Tool**: Gradle 8.14
+- **Language**: Java 23
+- **Build Tool**: Gradle 8.10
 - **Web Framework**: Ratpack 2.0.0
 - **Architecture**: Domain-Driven Design (DDD)
 
 ### Infrastructure
 - **Database**: PostgreSQL
-- **ORM**: Hibernate 6.6.14
+- **ORM**: Hibernate Reactive 3.0.0
 - **Migrations**: Flyway 11
 - **Dependency Injection**: Weld 6
 
@@ -19,8 +19,8 @@
 ## Getting Started
 
 ### Prerequisites
-- Java 21 JDK
-- Gradle 8.14+
+- Java 23 JDK
+- Gradle 8.10+
 - PostgreSQL 16+
 
 ### Installation

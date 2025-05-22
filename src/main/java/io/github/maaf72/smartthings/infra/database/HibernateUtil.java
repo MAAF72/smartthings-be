@@ -5,10 +5,12 @@ import java.io.InputStream;
 import java.util.Map;
 
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.reactive.mutiny.Mutiny.SessionFactory;
+import org.hibernate.reactive.provider.ReactivePersistenceProvider;
 import org.hibernate.reactive.provider.ReactiveServiceRegistryBuilder;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexReader;
@@ -33,18 +35,17 @@ public class HibernateUtil {
 
   @PostConstruct
   public void init() {
-    Map<String, Object> settings = Map.of(
-      AvailableSettings.JAKARTA_JDBC_URL, Config.APP_DATABASE_JDBC_URL,
-      AvailableSettings.JAKARTA_JDBC_USER, Config.APP_DATABASE_USERNAME,
-      AvailableSettings.JAKARTA_JDBC_PASSWORD, Config.APP_DATABASE_PASSWORD,
-      AvailableSettings.PHYSICAL_NAMING_STRATEGY, CamelCaseToUnderscoresNamingStrategy.class.getName(),
-      // "jakarta.persistence.provider", ReactivePersistenceProvider.class.getName(),
-      AvailableSettings.JAKARTA_CDI_BEAN_MANAGER, beanManager,
-      AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, true,
-      AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS, true,
-      AvailableSettings.SHOW_SQL, true,
-      AvailableSettings.FORMAT_SQL, true,
-      AvailableSettings.HIGHLIGHT_SQL, true
+    Map<String, Object> settings = Map.ofEntries(
+      Map.entry(AvailableSettings.JAKARTA_JDBC_URL, Config.APP_DATABASE_JDBC_URL),
+      Map.entry(AvailableSettings.JAKARTA_JDBC_USER, Config.APP_DATABASE_USERNAME),
+      Map.entry(AvailableSettings.JAKARTA_JDBC_PASSWORD, Config.APP_DATABASE_PASSWORD),
+      Map.entry(AvailableSettings.IMPLICIT_NAMING_STRATEGY, ImplicitNamingStrategyJpaCompliantImpl.class.getName()),
+      Map.entry(AvailableSettings.PHYSICAL_NAMING_STRATEGY, PhysicalNamingStrategySnakeCaseImpl.class.getName()),
+      Map.entry("jakarta.persistence.provider", ReactivePersistenceProvider.class.getName()),
+      Map.entry(AvailableSettings.JAKARTA_CDI_BEAN_MANAGER, beanManager),
+      Map.entry(AvailableSettings.SHOW_SQL, true),
+      Map.entry(AvailableSettings.FORMAT_SQL, true),
+      Map.entry(AvailableSettings.HIGHLIGHT_SQL, true)
     );
 
   StandardServiceRegistry registry = new ReactiveServiceRegistryBuilder()
@@ -73,7 +74,7 @@ public class HibernateUtil {
       metadataSources.addAnnotatedClassName(className);
     });
 
-    sessionFactory =  metadataSources.buildMetadata().buildSessionFactory().unwrap(SessionFactory.class);
+    sessionFactory = metadataSources.buildMetadata().buildSessionFactory().unwrap(SessionFactory.class);
   }
 
   @PreDestroy
