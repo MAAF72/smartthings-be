@@ -58,7 +58,7 @@ public class DeleteVendorDeviceHandler implements Handler {
 
     Promise.async(downstream ->
       deviceUsecase.deleteDevice(userClaims.getId(), userClaims.getRole(), deviceId).subscribe().with(
-        success -> downstream.success(Jackson.json(BaseResponse.of(true, "device deleted"))),
+        _ -> downstream.success(Jackson.json(BaseResponse.of(true, "device deleted"))),
         failure -> downstream.error(failure)
       )
     ).then(ctx::render);

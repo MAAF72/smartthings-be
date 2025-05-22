@@ -35,7 +35,7 @@ public class ExceptionHandler implements ServerErrorHandler {
               .collect(Collectors.toMap(
                 parts -> parts[0].replaceAll("([A-Z])(?=[A-Z])", "$1_").replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase(), // convert to snake case           
                 parts -> parts[1],                 
-                (a, b) -> a,                       
+                (a, _) -> a,                       
                 LinkedHashMap::new                 
               ));
 

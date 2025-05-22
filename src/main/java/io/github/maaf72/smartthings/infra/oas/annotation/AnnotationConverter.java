@@ -32,7 +32,7 @@ public class AnnotationConverter {
         .collect(
           ApiResponses::new, 
           (responseModel, responseAnn) -> responseModel.addApiResponse(responseAnn.responseCode(), fromAnnotation(responseAnn, components)), 
-          (a, b) -> {}
+          (_, _) -> {}
         )
       );
   }

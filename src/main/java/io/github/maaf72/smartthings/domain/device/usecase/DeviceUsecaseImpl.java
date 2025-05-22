@@ -51,7 +51,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
       return Uni.createFrom().failure(new HttpException(403, "you are not allowed to create a device"));
     }
 
-    return userRepository.getReference(actorId)
+    return userRepository.findById(actorId)
       .onItem()
       .ifNull()
         .failWith(() -> new HttpException(404, "missing user data"))
@@ -69,21 +69,21 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
 
         return repository.create(device)
           .onFailure()
-            .transform(t -> new HttpException(500, "failed to create device"))
+            .transform(_ -> new HttpException(500, "failed to create device"))
           .chain(persistedDevice -> {
             AuditLog auditLog = new AuditLog();
 
             auditLog.setModule(MODULE);
             auditLog.setAction("CREATE");
             auditLog.setSubject(actorId.toString());
-            auditLog.setObject(device.getId().toString());
+            auditLog.setObject(persistedDevice.getId().toString());
             auditLog.setMetadata(
-              CustomObjectMapper.getObjectMapper().convertValue(device, new TypeReference<>() {})
+              CustomObjectMapper.getObjectMapper().convertValue(persistedDevice, new TypeReference<>() {})
             );
 
             return auditLogRepository.create(auditLog).
               onFailure()
-                .transform(t -> new HttpException(500, "failed to log created device"))
+                .transform(_ -> new HttpException(500, "failed to log created device"))
               .replaceWith(persistedDevice);
           });
       });
@@ -187,21 +187,21 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
 
         return repository.update(device)
           .onFailure()
-            .transform(t -> new HttpException(500, "failed to update device"))
+            .transform(_ -> new HttpException(500, "failed to update device"))
           .chain(persistedDevice -> {
             AuditLog auditLog = new AuditLog();
 
             auditLog.setModule(MODULE);
             auditLog.setAction("UPDATE");
             auditLog.setSubject(actorId.toString());
-            auditLog.setObject(device.getId().toString());
+            auditLog.setObject(persistedDevice.getId().toString());
             auditLog.setMetadata(
-              CustomObjectMapper.getObjectMapper().convertValue(device, new TypeReference<>() {})
+              CustomObjectMapper.getObjectMapper().convertValue(persistedDevice, new TypeReference<>() {})
             );
 
             return auditLogRepository.create(auditLog).
               onFailure()
-                .transform(t -> new HttpException(500, "failed to log updated device"))
+                .transform(_ -> new HttpException(500, "failed to log updated device"))
               .replaceWith(persistedDevice);
           });
       });
@@ -225,8 +225,8 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
 
         return repository.deleteById(deviceId)
           .onFailure()
-            .transform(t -> new HttpException(500, "failed to delete device"))
-          .chain(persistedDevice -> {
+            .transform(_ -> new HttpException(500, "failed to delete device"))
+          .chain(_ -> {
             AuditLog auditLog = new AuditLog();
 
             auditLog.setModule(MODULE);
@@ -239,8 +239,8 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
 
             return auditLogRepository.create(auditLog).
               onFailure()
-                .transform(t -> new HttpException(500, "failed to log deleted device"))
-              .replaceWith(persistedDevice);
+                .transform(_ -> new HttpException(500, "failed to log deleted device"))
+              .replaceWithVoid();
           });
       });
   }
@@ -269,21 +269,21 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
 
             return repository.update(device)
               .onFailure()
-                .transform(t -> new HttpException(500, "failed to register device"))
+                .transform(_ -> new HttpException(500, "failed to register device"))
               .chain(persistedDevice -> {
                 AuditLog auditLog = new AuditLog();
 
                 auditLog.setModule(MODULE);
                 auditLog.setAction("REGISTER");
                 auditLog.setSubject(actorId.toString());
-                auditLog.setObject(device.getId().toString());
+                auditLog.setObject(persistedDevice.getId().toString());
                 auditLog.setMetadata(
-                  CustomObjectMapper.getObjectMapper().convertValue(device, new TypeReference<>() {})
+                  CustomObjectMapper.getObjectMapper().convertValue(persistedDevice, new TypeReference<>() {})
                 );
 
                 return auditLogRepository.create(auditLog)
                   .onFailure()
-                    .transform(t -> new HttpException(500, "failed to log registered device"))
+                    .transform(_ -> new HttpException(500, "failed to log registered device"))
                   .replaceWithVoid();
               });
           });
@@ -311,8 +311,8 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
 
         return repository.update(device)
           .onFailure()
-            .transform(t -> new HttpException(500, "failed to unregister device"))
-          .chain(persistedDevice -> {
+            .transform(_ -> new HttpException(500, "failed to unregister device"))
+          .chain(_ -> {
             AuditLog auditLog = new AuditLog();
 
             auditLog.setModule(MODULE);
@@ -325,7 +325,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
 
             return auditLogRepository.create(auditLog)
               .onFailure()
-                .transform(t -> new HttpException(500, "failed to log unregistered device"))
+                .transform(_ -> new HttpException(500, "failed to log unregistered device"))
               .replaceWithVoid();
           });
       });

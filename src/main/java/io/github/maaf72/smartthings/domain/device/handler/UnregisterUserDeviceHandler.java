@@ -58,7 +58,7 @@ public class UnregisterUserDeviceHandler implements Handler {
 
     Promise.async(downstream ->
       deviceUsecase.unregisterDevice(userClaims.getId(), userClaims.getRole(), deviceId).subscribe().with(
-        success -> downstream.success(Jackson.json(BaseResponse.of(true, "device unregistered"))),
+        _ -> downstream.success(Jackson.json(BaseResponse.of(true, "device unregistered"))),
         failure -> downstream.error(failure)
       )
     ).then(ctx::render);

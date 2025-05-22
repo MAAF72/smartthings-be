@@ -58,7 +58,7 @@ public class RegisterUserDeviceHandler implements Handler {
 
     Promise.async(downstream ->
       deviceUsecase.registerDevice(userClaims.getId(), userClaims.getRole(), deviceId).subscribe().with(
-        success -> downstream.success(Jackson.json(BaseResponse.of(true, "device registered"))),
+        _ -> downstream.success(Jackson.json(BaseResponse.of(true, "device registered"))),
         failure -> downstream.error(failure)
       )
     ).then(ctx::render);
