@@ -9,7 +9,6 @@ import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.reactive.mutiny.Mutiny.SessionFactory;
-import org.hibernate.reactive.provider.ReactivePersistenceProvider;
 import org.hibernate.reactive.provider.ReactiveServiceRegistryBuilder;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexReader;

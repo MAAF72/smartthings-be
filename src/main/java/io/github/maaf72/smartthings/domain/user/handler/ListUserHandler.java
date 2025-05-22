@@ -6,7 +6,6 @@ import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.domain.common.dto.PaginationResponse;
 import io.github.maaf72.smartthings.domain.user.dto.UserWithSummaryResponse;
 import io.github.maaf72.smartthings.domain.user.entity.UserWithTotalRegisteredDevices;
-import io.github.maaf72.smartthings.domain.user.handler.ListUserHandler.ListUserResponse;
 import io.github.maaf72.smartthings.domain.user.usecase.UserUsecase;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
