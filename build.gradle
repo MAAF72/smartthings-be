@@ -114,7 +114,22 @@ run {
   dependsOn tasks.named('jandex')
   environment env
 
-  jvmArgs += ['-Dorg.jboss.weld.bootstrap.debug=true']
+  systemProperties += [
+    'otel.service.name': 'smartthings-service',
+    'otel.logs.exporter': 'none',
+    'otel.metrics.exporter': 'none',
+    'otel.traces.exporter': 'otlp',
+    'otel.exporter.otlp.protocol': 'grpc',
+    'otel.exporter.otlp.endpoint': 'http://localhost:4317',
+    'otel.java.enabled.resource.providers': [
+      'io.opentelemetry.sdk.autoconfigure.internal.EnvironmentResourceProvider'
+    ].join(',')
+  ]
+
+  jvmArgs += [
+    '-Dorg.jboss.weld.bootstrap.debug=true',
+    '-javaagent:src/main/resources/otel/opentelemetry-javaagent.jar'
+  ]
 }
 
 group = 'io.github.maaf72'

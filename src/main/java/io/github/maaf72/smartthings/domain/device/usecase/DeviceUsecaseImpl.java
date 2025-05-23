@@ -24,6 +24,7 @@ import io.github.maaf72.smartthings.infra.exception.HttpException;
 import io.github.maaf72.smartthings.infra.mapper.CustomModelMapper;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.thirdapi.translation.TranslationService;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -46,6 +47,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
   @Inject
   TranslationService translationService;
 
+  @WithSpan
   public Uni<Device> createDevice(UUID actorId, Role role, CreateVendorDeviceRequest request) {
     if (!role.equals(Role.DEVICE_VENDOR)) {
       return Uni.createFrom().failure(new HttpException(403, "you are not allowed to create a device"));
@@ -89,6 +91,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
       });
   }
   
+  @WithSpan
   public Uni<List<Device>> listDevice(UUID actorId, Role role, PaginationRequest page) {
     return userRepository.findById(actorId)
       .onItem()
@@ -108,6 +111,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
       });
   }
   
+  @WithSpan
   public Uni<Long> countDevice(UUID actorId, Role role) {
     switch (role) {
       case ST_ADMINISTRATOR: return repository.countAll();
@@ -117,6 +121,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
     }
   }
 
+  @WithSpan
   public Uni<List<Device>> listAvailableDevice(UUID actorId, PaginationRequest page) {
     return userRepository.findById(actorId)
       .onItem()
@@ -127,10 +132,12 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
       );
   }
 
+  @WithSpan
   public Uni<Long> countAvailableDevice() {
     return repository.countAllAvailableDevice();
   }
 
+  @WithSpan
   public Uni<Device> getDevice(UUID actorId, Role role, UUID deviceId) {
     return repository.findById(deviceId)
       .onItem()
@@ -150,6 +157,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
       });
   }
 
+  @WithSpan
   public Uni<Device> updateDevice(UUID actorId, Role role, UpdateVendorDeviceRequest request, UUID deviceId) {
     return repository.findById(deviceId)
       .onItem()
@@ -207,6 +215,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
       });
   }
 
+  @WithSpan
   public Uni<Void> deleteDevice(UUID actorId, Role role, UUID deviceId) {
     return repository.findById(deviceId)
       .onItem()
@@ -245,6 +254,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
       });
   }
   
+  @WithSpan
   public Uni<Void> registerDevice(UUID actorId, Role role, UUID deviceId) {
     return repository.findById(deviceId)
       .onItem()
@@ -290,6 +300,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
       });
   }
   
+  @WithSpan
   public Uni<Void> unregisterDevice(UUID actorId, Role role, UUID deviceId) {
     return repository.findById(deviceId)
       .onItem()
@@ -331,6 +342,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
       });
   }
   
+  @WithSpan
   private Uni<List<Device>> translateListDevice(List<Device> listDevice, String country) {
     if (listDevice == null || listDevice.isEmpty()) {
         return Uni.createFrom().item(Collections.emptyList());
@@ -344,6 +356,7 @@ public class DeviceUsecaseImpl implements DeviceUsecase {
     .with(Device.class, Function.identity());
   }
 
+  @WithSpan
   private Uni<Device> translateDevice(Device device, String country) {
     return translationService.SingleCountryTranslate(device.getDeviceDescription(), country)
       .map(translatedText -> {

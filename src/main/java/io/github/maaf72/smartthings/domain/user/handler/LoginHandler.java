@@ -6,6 +6,7 @@ import io.github.maaf72.smartthings.domain.user.dto.TokenResponse;
 import io.github.maaf72.smartthings.domain.user.usecase.UserUsecase;
 import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
 import io.github.maaf72.smartthings.infra.security.ValidationUtil;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -47,7 +48,7 @@ public class LoginHandler implements Handler {
   @Inject
   UserUsecase userUsecase;
 
-  @Override
+  @WithSpan
   public void handle(Context ctx) {
     ctx.parse(Jackson.fromJson(LoginRequest.class)).then(request -> {
       ValidationUtil.validateOrThrow(request);

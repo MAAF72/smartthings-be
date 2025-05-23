@@ -17,6 +17,7 @@ import io.github.maaf72.smartthings.infra.exception.ExceptionHandler;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.middleware.CorsMiddleware;
 import io.github.maaf72.smartthings.infra.middleware.JwtAuthMiddleware;
+import io.github.maaf72.smartthings.infra.middleware.TracerMiddleware;
 import io.github.maaf72.smartthings.infra.oas.Oas;
 import io.github.maaf72.smartthings.itf.AppMiddlewareItf;
 import io.github.maaf72.smartthings.itf.AppRoutesItf;
@@ -52,6 +53,7 @@ public class Main {
 
   private void setupWebServer() throws Exception {
     List<AppMiddlewareItf> middlewareList = Arrays.asList(
+      container.select(TracerMiddleware.class).get(),
       container.select(CorsMiddleware.class).get(),
       container.select(JwtAuthMiddleware.class).get()
     );

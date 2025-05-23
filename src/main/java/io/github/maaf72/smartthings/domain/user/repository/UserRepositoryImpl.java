@@ -11,6 +11,7 @@ import io.github.maaf72.smartthings.domain.user.entity.User;
 import io.github.maaf72.smartthings.domain.user.entity.User.Role;
 import io.github.maaf72.smartthings.domain.user.entity.UserWithTotalRegisteredDevices;
 import io.github.maaf72.smartthings.infra.database.BaseRepository;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -25,10 +26,12 @@ public class UserRepositoryImpl extends BaseRepository<User, UUID> implements Us
     super(User.class, sessionFactory);
   }
 
+  @WithSpan
   public Uni<User> findByEmail(String email) {
     return findOne((cb, root) -> cb.equal(root.get("email"), email));
   }
   
+  @WithSpan
   public Uni<List<UserWithTotalRegisteredDevices>> findAllUserWithTotalRegisteredDevices(PaginationRequest page) {
     return sessionFactory.withSession(session -> {
       String hql = """
@@ -50,10 +53,12 @@ public class UserRepositoryImpl extends BaseRepository<User, UUID> implements Us
     });
   }
   
+  @WithSpan
   public Uni<Long> countAllUser() {
     return countAll((cb, root) -> cb.equal(root.get("role"), Role.ST_USERS));
   }
 
+  @WithSpan
   public Uni<List<UserWithTotalRegisteredDevices>> findAllVendorWithTotalRegisteredDevices(PaginationRequest page) {
     return sessionFactory.withSession(session -> {
       String hql = """
@@ -75,6 +80,7 @@ public class UserRepositoryImpl extends BaseRepository<User, UUID> implements Us
     });
   }
   
+  @WithSpan
   public Uni<Long> countAllVendor() {
     return countAll((cb, root) -> cb.equal(root.get("role"), Role.DEVICE_VENDOR));
   }

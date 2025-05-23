@@ -9,6 +9,7 @@ import io.github.maaf72.smartthings.domain.user.usecase.UserUsecase;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -52,7 +53,7 @@ public class GetUserHandler implements Handler {
   @Inject
   UserUsecase userUsecase;
 
-  @Override
+  @WithSpan
   public void handle(Context ctx) throws Exception {
     UserClaims userClaims = ctx.get(UserClaims.class);
 

@@ -10,6 +10,7 @@ import org.hibernate.reactive.mutiny.Mutiny.SessionFactory;
 
 import io.github.maaf72.smartthings.domain.common.dto.PaginationRequest;
 import io.github.maaf72.smartthings.itf.AppRepositoryItf;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -25,6 +26,7 @@ public abstract class BaseRepository<T, ID extends Serializable> implements AppR
   private final Class<T> entityClass;
   protected final SessionFactory sessionFactory;
 
+  @WithSpan
   public Uni<T> findById(ID id) {
     return sessionFactory.withSession(
       session -> session.find(entityClass, id)
@@ -48,6 +50,7 @@ public abstract class BaseRepository<T, ID extends Serializable> implements AppR
     );
   }
 
+  @WithSpan
   public Uni<T> findOne(BiFunction<CriteriaBuilder, Root<T>, Predicate> filterFunction) {
     return sessionFactory.withSession(
       session -> {
@@ -77,6 +80,7 @@ public abstract class BaseRepository<T, ID extends Serializable> implements AppR
     return findAll(null, page);
   }
   
+  @WithSpan
   public Uni<List<T>> findAll(BiFunction<CriteriaBuilder, Root<T>, Predicate> filterFunction, PaginationRequest page) {
     return sessionFactory.withSession(
       session -> {
@@ -105,6 +109,7 @@ public abstract class BaseRepository<T, ID extends Serializable> implements AppR
     return countAll(null);
   }
 
+  @WithSpan
   public Uni<Long> countAll(BiFunction<CriteriaBuilder, Root<T>, Predicate> filterFunction) {
     return sessionFactory.withSession(
       session -> {
@@ -122,18 +127,21 @@ public abstract class BaseRepository<T, ID extends Serializable> implements AppR
     );
   }
 
+  @WithSpan
   public Uni<T> create(T entity) {
     return sessionFactory.withTransaction(
       session -> session.persist(entity).replaceWith(entity)
     );
   }
 
+  @WithSpan
   public Uni<T> update(T entity) {
     return sessionFactory.withTransaction(
       session-> session.merge(entity)
     );
   }
 
+  @WithSpan
   public Uni<Void> deleteById(ID id) {
     return sessionFactory.withTransaction(
       session -> session
@@ -145,6 +153,7 @@ public abstract class BaseRepository<T, ID extends Serializable> implements AppR
     );
   }
 
+  @WithSpan
   public Uni<T> getReference(ID id) {
     return sessionFactory.withSession(
         session -> Uni.createFrom().item(session.getReference(entityClass, id))

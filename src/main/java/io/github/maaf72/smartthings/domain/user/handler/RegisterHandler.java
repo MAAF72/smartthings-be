@@ -8,6 +8,7 @@ import io.github.maaf72.smartthings.domain.user.usecase.UserUsecase;
 import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
 import io.github.maaf72.smartthings.infra.security.ValidationUtil;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -49,7 +50,7 @@ public class RegisterHandler implements Handler {
   @Inject
   UserUsecase userUsecase;
 
-  @Override
+  @WithSpan
   public void handle(Context ctx) throws Exception {
     ctx.parse(Jackson.fromJson(RegisterRequest.class)).then(request -> {
       ValidationUtil.validateOrThrow(request);

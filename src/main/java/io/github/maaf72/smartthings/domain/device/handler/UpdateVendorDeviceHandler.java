@@ -11,6 +11,7 @@ import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.oas.annotation.ApiDoc;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
 import io.github.maaf72.smartthings.infra.security.ValidationUtil;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -60,7 +61,7 @@ public class UpdateVendorDeviceHandler implements Handler {
   @Inject
   DeviceUsecase deviceUsecase;
 
-  @Override
+  @WithSpan
   public void handle(Context ctx) throws Exception {
     ctx.parse(Jackson.fromJson(UpdateVendorDeviceRequest.class)).then(request -> {
       ValidationUtil.validateOrThrow(request);

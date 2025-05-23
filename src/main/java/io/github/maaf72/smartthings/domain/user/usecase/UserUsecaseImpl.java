@@ -16,6 +16,7 @@ import io.github.maaf72.smartthings.infra.exception.HttpException;
 import io.github.maaf72.smartthings.infra.security.HashUtil;
 import io.github.maaf72.smartthings.infra.security.JwtUtil;
 import io.github.maaf72.smartthings.infra.security.UserClaims;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -32,6 +33,7 @@ public class UserUsecaseImpl implements UserUsecase {
   @Inject
   AuditLogRepository auditLogRepository;
 
+  @WithSpan
   public Uni<User> getUser(UUID actorId, Role role, UUID userId) {
     boolean isAllowed = 
       (false)
@@ -50,6 +52,7 @@ public class UserUsecaseImpl implements UserUsecase {
     return user;
   }
 
+  @WithSpan
   public Uni<List<UserWithTotalRegisteredDevices>> listUserWithTotalRegisteredDevices(UUID actorId, Role role, PaginationRequest page) {
     boolean isAllowed = (false)
       || (role.equals(Role.ST_ADMINISTRATOR));
@@ -61,10 +64,12 @@ public class UserUsecaseImpl implements UserUsecase {
     return repository.findAllUserWithTotalRegisteredDevices(page);
   }
   
+  @WithSpan
   public Uni<Long> countUsers() {
     return repository.countAllUser();
   }
  
+  @WithSpan
   public Uni<List<UserWithTotalRegisteredDevices>> listVendorWithTotalRegisteredDevices(UUID actorId, Role role, PaginationRequest page) {
     boolean isAllowed = (false)
       || (role.equals(Role.ST_ADMINISTRATOR));
@@ -76,16 +81,18 @@ public class UserUsecaseImpl implements UserUsecase {
     return repository.findAllVendorWithTotalRegisteredDevices(page);
   }
   
+  @WithSpan
   public Uni<Long> countVendors() {
     return repository.countAllVendor();
   }
  
+  @WithSpan
   public Uni<User> register(RegisterRequest request) {
     return repository.findByEmail(request.getEmail())
       .onItem()
       .ifNotNull()
         .failWith(() -> new HttpException(400, "email has been taken"))
-      .flatMap(existingUser -> {
+      .flatMap(_ -> {
         String hash = HashUtil.hash(request.getPassword());
             
         User user = new User();
@@ -101,6 +108,7 @@ public class UserUsecaseImpl implements UserUsecase {
       });
   }
   
+  @WithSpan
   public Uni<String> login(LoginRequest request) {
     return repository.findByEmail(request.getEmail())
       .onItem()

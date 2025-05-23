@@ -6,6 +6,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.github.maaf72.smartthings.domain.common.dto.BaseResponse;
+import io.github.maaf72.smartthings.infra.tracing.RequestTracer;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import ratpack.core.error.ServerErrorHandler;
@@ -20,16 +25,11 @@ public class ExceptionHandler implements ServerErrorHandler {
       case null:
         break;
       case Error e:
-        log.error("Error occurred: " + e.getClass().getCanonicalName() + " : {}", e.getMessage());
-        context.getResponse().status(500);
-        context.render(Jackson.json(BaseResponse.of(false, "Server Internal Error")));
+        renderError(context, 500, e);
         break;
       case Exception ex:
-        log.error("Exception occurred: " + ex.getClass().getCanonicalName() + " : {}", ex.getMessage());
         switch (ex) {
           case ValidationException ve:
-            context.getResponse().status(400);
-
             Map<String, Object> details = Stream.of(ve.getMessage().split("; "))
               .map(pair -> pair.split(": ", 2))     
               .collect(Collectors.toMap(
@@ -39,22 +39,58 @@ public class ExceptionHandler implements ServerErrorHandler {
                 LinkedHashMap::new                 
               ));
 
-            context.render(Jackson.json(BaseResponse.of(false, "Bad Request", details)));
+            renderError(context, 400, new Exception("Bad Request"), details);
             break;
           case HttpException he:
-            context.getResponse().status(he.getStatusCode());
-            context.render(Jackson.json(BaseResponse.of(false, he.getMessage())));
+            renderError(context, he.getStatusCode(), he);
             break;
           default:
-            context.getResponse().status(500);
-            context.render(Jackson.json(BaseResponse.of(false, "Server Internal Error")));
+            renderError(context, 500, ex);
             break;
         }
         break;
       default:
-        log.error("Unknown throwable occurred: " + throwable.getClass().getCanonicalName() + " : {}", throwable.getMessage());
-        context.getResponse().status(500);
-        context.render(Jackson.json(BaseResponse.of(false, "Server Internal Error")));
+        renderError(context, 500, throwable);
         break;
     }}
+
+  private static void renderError(Context context, int statusCode, Throwable throwable) {
+    renderError(context, statusCode, throwable, null);
+  }
+
+  private static void renderError(Context context, int statusCode, Throwable throwable, Map<String, Object> details) {
+    context.maybeGet(RequestTracer.class).ifPresent(
+      requestTracer -> {
+        Span span = requestTracer.getRootSpan();
+
+        if (!span.isRecording()) {
+          return;
+        }
+
+        span.setStatus(StatusCode.ERROR);
+
+        AttributesBuilder attributesBuilder = Attributes.builder();
+
+        attributesBuilder.put("error.message", throwable.getMessage());
+
+        if (details != null) {
+          attributesBuilder.put("error.details", details.toString());
+        }
+
+        span.addEvent("error", attributesBuilder.build());
+      }
+    );
+
+    String message = throwable.getMessage();
+
+    if (statusCode == 500) {
+      log.error("Server Internal Error: {} -> {}", throwable.getClass().getCanonicalName(), message);
+      log.debug(throwable.getStackTrace()[0].toString());
+
+      message = "Server Internal Error";
+    }
+
+    context.getResponse().status(statusCode);
+    context.render(Jackson.json(BaseResponse.of(false, message, details)));
+  }
 }
