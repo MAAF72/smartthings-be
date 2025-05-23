@@ -18,13 +18,12 @@ import io.github.maaf72.smartthings.infra.mapper.CustomObjectMapper;
 import io.github.maaf72.smartthings.infra.middleware.CorsMiddleware;
 import io.github.maaf72.smartthings.infra.middleware.JwtAuthMiddleware;
 import io.github.maaf72.smartthings.infra.middleware.TracerMiddleware;
-import io.github.maaf72.smartthings.infra.oas.Oas;
+import io.github.maaf72.smartthings.infra.oas.OasRoutes;
 import io.github.maaf72.smartthings.itf.AppMiddlewareItf;
 import io.github.maaf72.smartthings.itf.AppRoutesItf;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import ratpack.core.error.ServerErrorHandler;
-import ratpack.core.handling.Handler;
 import ratpack.core.server.RatpackServer;
 
 @ApplicationScoped
@@ -76,13 +75,10 @@ public class Main {
             .add(ServerErrorHandler.class, new ExceptionHandler())
           )
           .handlers(c -> {
-            c.files(f -> f.files("swagger-ui").indexFiles("index.html"));
-            middlewareList.forEach(r -> c.all((Handler) r));
+            container.select(OasRoutes.class).get().Routes(c);
+            middlewareList.forEach(c::all);
             c.prefix(Config.APP_API_PREFIX, cApi -> {
               routesList.forEach(r -> r.Routes(cApi));
-            });
-            c.get("swagger-ui/swagger.json", ctx -> {
-              ctx.getResponse().contentType("application/json").send(Oas.getOasAsJsonString());
             });
           });
       });

@@ -1,39 +1,23 @@
 package io.github.maaf72.smartthings.infra.middleware;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Optional;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.function.Supplier;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import javax.net.ssl.SSLSession;
-
-import com.google.common.net.HostAndPort;
-import com.google.common.reflect.TypeToken;
-
+import io.github.maaf72.smartthings.config.Config;
 import io.github.maaf72.smartthings.infra.tracing.RequestTracer;
 import io.github.maaf72.smartthings.itf.AppMiddlewareItf;
-import io.netty.buffer.ByteBuf;
-import io.netty.handler.codec.http.cookie.Cookie;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import ratpack.core.handling.Context;
-import ratpack.core.http.Headers;
-import ratpack.core.http.HttpMethod;
-import ratpack.core.http.MediaType;
 import ratpack.core.http.MutableHeaders;
-import ratpack.core.http.Request;
-import ratpack.core.http.TypedData;
-import ratpack.exec.Promise;
-import ratpack.exec.registry.NotInRegistryException;
 import ratpack.exec.registry.Registry;
-import ratpack.exec.stream.TransformablePublisher;
-import ratpack.func.Block;
-import ratpack.func.MultiValueMap;
 
 @ApplicationScoped
 @Slf4j
@@ -42,6 +26,16 @@ public class TracerMiddleware implements AppMiddlewareItf {
 
   @Override
   public void handle(Context ctx) throws Exception {
+    String uri = ctx.getRequest().getUri();
+
+    for (String path : Config.APP_PUBLIC_PATHS) {
+      if (uri.startsWith(path)) {
+        ctx.next();
+
+        return;
+      }
+    }
+    
     String strRequestId = ctx.header(REQUEST_ID_HEADER_KEY).orElse(UUID.randomUUID().toString());
 
     MutableHeaders responseHeaders = ctx.getResponse().getHeaders();
@@ -52,249 +46,56 @@ public class TracerMiddleware implements AppMiddlewareItf {
 
     RequestTracer requestTracer = new RequestTracer(UUID.fromString(strRequestId), span);
 
-    if (false) {
-      ctx.getRequest().getBody().cache().then(body -> {
-        if (span.isRecording()) {
-          String method = ctx.getRequest().getMethod().getName();
-          String path = ctx.getRequest().getPath();
+    if (span.isRecording()) {
+      String method = ctx.getRequest().getMethod().getName();
+      String path = ctx.getRequest().getPath();
+      Map<String, String> parameterPathMap = new HashMap<>();
 
-          span.updateName("%s: %s".formatted(method, path));
-          span.setAttribute("request.id", requestTracer.getId().toString());
-          span.addEvent("http.request", Attributes.of(
-            AttributeKey.stringKey("http.request.body"), body.getText()
-          ));
+      String parameterizedPath = UrlPathParser.parsePath(path, parameterPathMap);
 
-          log.info(body.getText());
-        }
-        
-        ctx.getRequest().add(body);
+      span.updateName("%s: %s".formatted(method, parameterizedPath));
+      span.setAttribute("request.id", requestTracer.getId().toString());
 
-        Registry registry = Registry.single(RequestTracer.class, requestTracer);
-
-        ctx.next(registry);
-      });
+      parameterPathMap.forEach((key, value) -> span.setAttribute("url.path.parameter." + key, value));
     }
+    
+    Registry registry = Registry.single(RequestTracer.class, requestTracer);
 
-    // Get and cache the body promise
-    Promise<TypedData> cachedBody = ctx.getRequest().getBody().cache();
+    ctx.next(registry);
+  }
 
-    // Create a new request wrapper with the cached body
-    Request wrappedRequest = new RequestWrapper(ctx.getRequest(), cachedBody);
+  private static class UrlPathParser {
+    private static final Pattern UUID_PATTERN = Pattern.compile(
+      "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    );
 
-    // Process the cached body
-    cachedBody.then(body -> {
-      if (span.isRecording()) {
-          String method = wrappedRequest.getMethod().getName();
-          String path = wrappedRequest.getPath();
-          
-          span.updateName("%s: %s".formatted(method, path));
-          span.setAttribute("request.id", requestTracer.getId().toString());
-          span.addEvent("http.request", Attributes.of(
-              AttributeKey.stringKey("http.request.body"), body.getText()
-          ));
+    public static String parsePath(String input, Map<String, String> params) {
+      List<String> parts = Arrays.stream(input.split("/"))
+        .filter(s -> !s.isEmpty())
+        .collect(Collectors.toList());
 
-          log.info("Request body: {}", body.getText());
+      List<String> outputParts = new ArrayList<>();
+
+      for (int i = 0; i < parts.size(); i++) {
+        String part = parts.get(i);
+        if (isUUID(part)) {
+          if (i > 0) { // Ensure there is a preceding segment
+            String resource = parts.get(i - 1);
+            String paramName = resource + "_id";
+            params.put(paramName, part);
+            outputParts.add("{" + paramName + "}");
+          }
+        } else {
+          outputParts.add(part);
+        }
       }
 
-      
-      // Create the registry with both the tracer and the original request
-      Registry registry = Registry.builder()
-        .add(RequestTracer.class, requestTracer)
-        .add(Request.class, wrappedRequest)
-        .build();
-
-      // Continue with the wrapped request and custom registry
-      ctx.next(registry);
-    });
-  }
-
-  private static class RequestWrapper implements Request {
-    private final Request delegate;
-    private final Promise<TypedData> bodyPromise;
-
-    RequestWrapper(Request delegate, Promise<TypedData> bodyPromise) {
-        this.delegate = delegate;
-        this.bodyPromise = bodyPromise;
+      return "/" + String.join("/", outputParts);
     }
 
-    @Override
-    public Promise<TypedData> getBody() {
-        return bodyPromise;
-    }
-
-    @Override
-    public <T> void remove(TypeToken<T> type) throws NotInRegistryException {
-      delegate.remove(type);
-    }
-
-    @Override
-    public <O> Optional<O> maybeGet(TypeToken<O> type) {
-      return delegate.maybeGet(type);
-    }
-
-    @Override
-    public <O> Iterable<? extends O> getAll(TypeToken<O> type) {
-      return delegate.getAll(type);
-    }
-
-    @Override
-    public HttpMethod getMethod() {
-      return delegate.getMethod();
-    }
-
-    @Override
-    public String getProtocol() {
-      return delegate.getProtocol();
-    }
-
-    @Override
-    public String getRawUri() {
-      return delegate.getRawUri();
-    }
-
-    @Override
-    public String getUri() {
-      return delegate.getUri();
-    }
-
-    @Override
-    public String getQuery() {
-      return delegate.getQuery();
-    }
-
-    @Override
-    public String getPath() {
-      return delegate.getPath();
-    }
-
-    @Override
-    public MultiValueMap<String, String> getQueryParams() {
-      return delegate.getQueryParams();
-    }
-
-    @Override
-    public Set<Cookie> getCookies() {
-      return delegate.getCookies();
-    }
-
-    @Override
-    public String oneCookie(String name) {
-      return delegate.oneCookie(name);
-    }
-
-    @Override
-    public void setIdleTimeout(Duration idleTimeout) {
-      delegate.setIdleTimeout(idleTimeout);
-    }
-
-    @Override
-    public Promise<TypedData> getBody(Block onTooLarge) {
-      return delegate.getBody(onTooLarge);
-    }
-
-    @Override
-    public Promise<TypedData> getBody(long maxContentLength) {
-      return delegate.getBody(maxContentLength);
-    }
-
-    @Override
-    public Promise<TypedData> getBody(long maxContentLength, Block onTooLarge) {
-      return delegate.getBody(maxContentLength, onTooLarge);
-    }
-
-    @Override
-    public TransformablePublisher<? extends ByteBuf> getBodyStream() {
-     return delegate.getBodyStream();
-    }
-
-    @Override
-    public TransformablePublisher<? extends ByteBuf> getBodyStream(long maxContentLength) {
-      return delegate.getBodyStream(maxContentLength);
-    }
-
-    @Override
-    public Headers getHeaders() {
-      return delegate.getHeaders();
-    }
-
-    @Override
-    public MediaType getContentType() {
-      return delegate.getContentType();
-    }
-
-    @Override
-    public HostAndPort getRemoteAddress() {
-      return delegate.getRemoteAddress();
-    }
-
-    @Override
-    public HostAndPort getLocalAddress() {
-      return delegate.getLocalAddress();
-    }
-
-    @Override
-    public boolean isAjaxRequest() {
-      return delegate.isAjaxRequest();
-    }
-
-    @Override
-    public boolean isExpectsContinue() {
-      return delegate.isExpectsContinue();
-    }
-
-    @Override
-    public boolean isChunkedTransfer() {
-      return delegate.isChunkedTransfer();
-    }
-
-    @Override
-    public long getContentLength() {
-      return delegate.getContentLength();
-    }
-
-    @Override
-    public Instant getTimestamp() {
-      return delegate.getTimestamp();
-    }
-
-    @Override
-    public void setMaxContentLength(long maxContentLength) {
-      delegate.setMaxContentLength(maxContentLength);
-    }
-
-    @Override
-    public long getMaxContentLength() {
-      return delegate.getMaxContentLength();
-    }
-
-    @Override
-    public Optional<SSLSession> getSslSession() {
-      return delegate.getSslSession();
-    }
-
-    @Override
-    public <O> Request add(Class<O> type, O object) {
-     return delegate.add(type, object);
-    }
-
-    @Override
-    public <O> Request add(TypeToken<O> type, O object) {
-      return delegate.add(type, object);
-    }
-
-    @Override
-    public Request add(Object object) {
-      return delegate.add(object);
-    }
-
-    @Override
-    public <O> Request addLazy(Class<O> type, Supplier<? extends O> supplier) {
-      return delegate.addLazy(type, supplier);
-    }
-
-    @Override
-    public <O> Request addLazy(TypeToken<O> type, Supplier<? extends O> supplier) {
-     return delegate.addLazy(type, supplier);
+     private static boolean isUUID(String s) {
+      return UUID_PATTERN.matcher(s).matches();
     }
   }
+
 }

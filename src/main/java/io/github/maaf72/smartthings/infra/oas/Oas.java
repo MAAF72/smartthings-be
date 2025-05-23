@@ -114,11 +114,11 @@ public class Oas {
     return openAPI;
   }
 
-  public static String getOasAsJsonString() {
+  static String getOasAsJsonString() {
     return Json.pretty(oas);
   }
 
-  public static OpenAPI getOas() {
+  static OpenAPI getOas() {
     return oas;
   }
 }
