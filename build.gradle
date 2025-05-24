@@ -92,27 +92,25 @@ def loadEnvFile() {
   return env
 }
 
-def env = loadEnvFile()
+loadEnvFile()
 
 jandex {
   version = '3.3.1'
 }
 
-
 flyway {
   locations = ['filesystem:src/main/resources/database/migration']
   schemas = ['public']
 
-  url = env['APP_DATABASE_JDBC_URL']
-  user = env['APP_DATABASE_USERNAME']
-  password = env['APP_DATABASE_PASSWORD']
+  url = System.getenv('APP_DATABASE_JDBC_URL')
+  user = System.getenv('APP_DATABASE_USERNAME')
+  password = System.getenv('APP_DATABASE_PASSWORD')
 
   cleanDisabled = false
 }
 
 run {
   dependsOn tasks.named('jandex')
-  environment env
 
   systemProperties += [
     'otel.service.name': 'smartthings-service',
@@ -120,14 +118,16 @@ run {
     'otel.metrics.exporter': 'none',
     'otel.traces.exporter': 'otlp',
     'otel.exporter.otlp.protocol': 'grpc',
-    'otel.exporter.otlp.endpoint': 'http://localhost:4317',
+    'otel.exporter.otlp.endpoint': System.getenv('APP_TRACER_EXPORTER_ENDPOINT'),
     'otel.java.enabled.resource.providers': [
-      'io.opentelemetry.sdk.autoconfigure.internal.EnvironmentResourceProvider'
+      'io.opentelemetry.sdk.autoconfigure.EnvironmentResourceProvider'
     ].join(',')
   ]
 
   jvmArgs += [
     '-Dorg.jboss.weld.bootstrap.debug=true',
+    '-Dio.netty.noUnsafe=true',
+    '-Dio.netty.transport.noNative=true',
     '-javaagent:src/main/resources/otel/opentelemetry-javaagent.jar'
   ]
 }
