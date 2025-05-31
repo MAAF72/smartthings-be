@@ -72,27 +72,37 @@ configurations {
   }
 }
 
-def loadEnvFile() {
-  def env = [:]
-  def envFile = file('.env')
+def loadEnvironment() {
+  def env = [:] 
+  
+  env.putAll(System.getenv())
 
+  def envFile = file('.env')
   if (envFile.exists()) {
     envFile.eachLine { line ->
       line = line.trim()
       if (line && !line.startsWith('#')) {
-        def (key, value) = line.split('=', 2)*.trim()
+        def parts = line.split('=', 2)
+        if (parts.size() == 2) {
+          def key = parts[0].trim()
+          def value = parts[1].trim()
 
-        if (key && value != null) {
           env[key] = value
         }
       }
     }
   }
-
+  
   return env
 }
 
-loadEnvFile()
+def environment = loadEnvironment()
+
+tasks.withType(JavaExec).configureEach { task ->
+  environment.each { key, value ->
+    task.environment(key, value)
+  }
+}
 
 jandex {
   version = '3.3.1'
@@ -102,9 +112,9 @@ flyway {
   locations = ['filesystem:src/main/resources/database/migration']
   schemas = ['public']
 
-  url = System.getenv('APP_DATABASE_JDBC_URL')
-  user = System.getenv('APP_DATABASE_USERNAME')
-  password = System.getenv('APP_DATABASE_PASSWORD')
+  url = environment.APP_DATABASE_JDBC_URL
+  user = environment.APP_DATABASE_USERNAME
+  password = environment.APP_DATABASE_PASSWORD
 
   cleanDisabled = false
 }
@@ -118,7 +128,7 @@ run {
     'otel.metrics.exporter': 'none',
     'otel.traces.exporter': 'otlp',
     'otel.exporter.otlp.protocol': 'grpc',
-    'otel.exporter.otlp.endpoint': System.getenv('APP_TRACER_EXPORTER_ENDPOINT'),
+    'otel.exporter.otlp.endpoint': environment.APP_TRACER_EXPORTER_ENDPOINT,
     'otel.java.enabled.resource.providers': [
       'io.opentelemetry.sdk.autoconfigure.EnvironmentResourceProvider'
     ].join(',')
